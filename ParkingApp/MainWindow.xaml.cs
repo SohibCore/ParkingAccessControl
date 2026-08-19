@@ -9,7 +9,11 @@ namespace ParkingApp
     {
         private VideoCapture? _capture;
         private CancellationTokenSource? _cts;
+        private readonly OcrService _ocrService = new();
         private readonly PlateDetector _plateDetector = new();
+        private string? _lastDetectedPlate;
+        private DateTime _lastDetectedTime = DateTime.MinValue;
+
         public MainWindow()
         {
             InitializeComponent();
@@ -39,7 +43,18 @@ namespace ParkingApp
 
                     foreach (var rect in rects)
                     {
-                        Cv2.Rectangle(frame, rect, Scalar.LimeGreen, 2);
+                        using var cropped = new Mat(frame, rect);
+                        var text = _ocrService.ReadText(cropped);
+
+                        if (!string.IsNullOrWhiteSpace(text) && text.Length >= 5)
+                        {
+                            _lastDetectedPlate = text;
+                            _lastDetectedTime = DateTime.Now;
+
+                            Cv2.Rectangle(frame, rect, Scalar.LimeGreen, 2);
+                            Cv2.PutText(frame, text, new Point(rect.X, rect.Y - 10),
+                                HersheyFonts.HersheySimplex, 0.8, Scalar.LimeGreen, 2);
+                        }
                     }
 
                     var bitmap = frame.ToBitmapSource();
@@ -48,6 +63,11 @@ namespace ParkingApp
                     Dispatcher.Invoke(() =>
                     {
                         CameraView.Source = bitmap;
+
+                        if (_lastDetectedPlate != null && (DateTime.Now - _lastDetectedTime).TotalSeconds < 3)
+                        {
+                            PlateTextBlock.Text = $"Aniqlangan: {_lastDetectedPlate}";
+                        }
                     });
                 }
             }, token);
@@ -60,6 +80,8 @@ namespace ParkingApp
             _cts?.Cancel();
             _capture?.Release();
             _capture?.Dispose();
+            _ocrService.Dispose();
+            base.OnClosed(e);
             _capture = null;
 
             CameraView.Source = null;
@@ -93,7 +115,7 @@ namespace ParkingApp
 
                 if (aspectRatio > 2.0 && aspectRatio < 5.5 && rect.Width > 80)
                 {
-                    Mat cropped = new Mat(frame, rect); 
+                    Mat cropped = new Mat(frame, rect);
                     candidates.Add(cropped.Clone());
                 }
             }
