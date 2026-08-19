@@ -2,6 +2,7 @@
 using System.Windows;
 using OpenCvSharp.WpfExtensions;
 using Point = OpenCvSharp.Point;
+using ParkingApp.DataBase;
 
 namespace ParkingApp
 {
@@ -18,12 +19,12 @@ namespace ParkingApp
         public MainWindow()
         {
             InitializeComponent();
-
-            try
-            {
-                _db.Add("Sardor Aliyev", "24", "01A123BC");
-            }
-            catch { }
+        }
+        private void ManageResidentsButton_Click(object sender, RoutedEventArgs e)
+        {
+            var window = new ResidentsWindow(_db);
+            window.Owner = this;
+            window.ShowDialog();
         }
         private void StartCameraButton_Click(object sender, RoutedEventArgs e)
         {
@@ -69,7 +70,7 @@ namespace ParkingApp
                             {
                                 if (resident != null)
                                 {
-                                    StatusTextBlock.Text = $"✅ RUXSAT: {resident.Value.FullName} ({resident.Value.Apartment}-xonadon)";
+                                    StatusTextBlock.Text = $"✅ RUXSAT: {resident.FullName} ({resident.Apartment}-xonadon)";
                                 }
                                 else
                                 {
