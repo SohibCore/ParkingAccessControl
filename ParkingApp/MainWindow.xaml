@@ -1,0 +1,43 @@
+﻿<Window x:Class="ParkingApp.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:ParkingApp"
+        mc:Ignorable="d"
+        Title="Parking Access Control" Height="700" Width="900"
+        Background="#F5F5F5">
+
+    <Window.Resources>
+        <Style TargetType="Button">
+            <Setter Property="Background" Value="#2563EB"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Padding" Value="16,8"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" Text="Parking Access Control"
+                   FontSize="24" FontWeight="Bold" Margin="0,0,0,20"/>
+
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,15">
+            <Button x:Name="StartCameraButton" Content="Kamerani ishga tushirish" Click="StartCameraButton_Click"/>
+            <TextBlock x:Name="MyTextBlock" Text="" VerticalAlignment="Center" Margin="15,0,0,0"/>
+
+            <Button x:Name="StopCameraButton" Content="To'xtatish" Margin="10,0,0,0" Click="StopCameraButton_Click" IsEnabled="False"/>
+        </StackPanel>
+
+        <Border Grid.Row="2" BorderBrush="#D1D5DB" BorderThickness="1" CornerRadius="6" Background="Black">
+            <Image x:Name="CameraView" Stretch="Uniform"/>
+        </Border>
+    </Grid>
+</Window>
