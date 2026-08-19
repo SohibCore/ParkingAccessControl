@@ -8,15 +8,22 @@ namespace ParkingApp
     public partial class MainWindow : System.Windows.Window
     {
         private VideoCapture? _capture;
+        private string? _lastDetectedPlate;
         private CancellationTokenSource? _cts;
+        private readonly DatabaseService _db = new();
         private readonly OcrService _ocrService = new();
         private readonly PlateDetector _plateDetector = new();
-        private string? _lastDetectedPlate;
         private DateTime _lastDetectedTime = DateTime.MinValue;
 
         public MainWindow()
         {
             InitializeComponent();
+
+            try
+            {
+                _db.Add("Sardor Aliyev", "24", "01A123BC");
+            }
+            catch { }
         }
         private void StartCameraButton_Click(object sender, RoutedEventArgs e)
         {
@@ -46,14 +53,29 @@ namespace ParkingApp
                         using var cropped = new Mat(frame, rect);
                         var text = _ocrService.ReadText(cropped);
 
-                        if (!string.IsNullOrWhiteSpace(text) && text.Length >= 5)
+                        if (!string.IsNullOrWhiteSpace(text) && text.Length >= 5 && text.Length <= 9)
                         {
                             _lastDetectedPlate = text;
                             _lastDetectedTime = DateTime.Now;
 
+                            var resident = _db.GetByCarNumber(text);
+
+                            Scalar color = resident != null ? Scalar.LimeGreen : Scalar.Red;
                             Cv2.Rectangle(frame, rect, Scalar.LimeGreen, 2);
                             Cv2.PutText(frame, text, new Point(rect.X, rect.Y - 10),
                                 HersheyFonts.HersheySimplex, 0.8, Scalar.LimeGreen, 2);
+
+                            Dispatcher.Invoke(() =>
+                            {
+                                if (resident != null)
+                                {
+                                    StatusTextBlock.Text = $"✅ RUXSAT: {resident.Value.FullName} ({resident.Value.Apartment}-xonadon)";
+                                }
+                                else
+                                {
+                                    StatusTextBlock.Text = $"⛔ RAD ETILDI: {text} ro'yxatda yo'q";
+                                }
+                            });
                         }
                     }
 
@@ -147,7 +169,6 @@ namespace ParkingApp
                     rects.Add(rect);
                 }
             }
-
             return rects;
         }
     }

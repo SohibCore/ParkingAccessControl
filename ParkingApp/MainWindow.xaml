@@ -35,6 +35,7 @@
 
             <Button x:Name="StopCameraButton" Content="To'xtatish" Margin="10,0,0,0" Click="StopCameraButton_Click" IsEnabled="False"/>
             <TextBlock x:Name="PlateTextBlock" VerticalAlignment="Center" FontSize="18" FontWeight="Bold" Foreground="Green" Margin="20,0,0,0"/>
+            <TextBlock x:Name="StatusTextBlock" FontSize="18" FontWeight="Bold" Margin="0,10,0,0"/>
         </StackPanel>
 
         <Border Grid.Row="2" BorderBrush="#D1D5DB" BorderThickness="1" CornerRadius="6" Background="Black">
