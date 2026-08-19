@@ -1,12 +1,12 @@
 ﻿using OpenCvSharp;
 using System.Windows;
+using ParkingApp.DataBase;
 using OpenCvSharp.WpfExtensions;
 using Point = OpenCvSharp.Point;
-using ParkingApp.DataBase;
 
 namespace ParkingApp
 {
-    public partial class MainWindow : System.Windows.Window
+    public partial class AdminWindow : System.Windows.Window
     {
         private VideoCapture? _capture;
         private string? _lastDetectedPlate;
@@ -16,11 +16,11 @@ namespace ParkingApp
         private readonly PlateDetector _plateDetector = new();
         private DateTime _lastDetectedTime = DateTime.MinValue;
 
-        public MainWindow()
+        public AdminWindow()
         {
             InitializeComponent();
         }
-        private void ManageResidentsButton_Click(object sender, RoutedEventArgs e)
+        private void AdminButton_Click(object sender, RoutedEventArgs e)
         {
             var window = new ResidentsWindow(_db);
             window.Owner = this;

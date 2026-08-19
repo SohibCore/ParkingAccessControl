@@ -1,0 +1,57 @@
+﻿<Window x:Class="ParkingApp.LoginWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="LoginWindow"
+        Height="488"
+        Width="899">
+
+    <Grid>
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Admin / Resident -->
+        <StackPanel x:Name="RolePanel"
+                Grid.Row="0"
+                VerticalAlignment="Center"
+                HorizontalAlignment="Center">
+
+            <TextBlock Text="Kim sifatida kirmoqchisiz?"
+                   HorizontalAlignment="Center"/>
+
+            <Button Content="Admin"
+                Click="AdminButton_Click"
+                Margin="0,10,0,0"
+                Width="200"/>
+
+            <Button Content="Rezident"
+                Click="ResidentButton_Click"
+                Margin="0,5,0,0"
+                Width="200"/>
+
+        </StackPanel>
+
+        <!-- Password -->
+        <StackPanel x:Name="PasswordPanel"
+                Grid.Row="0"
+                Visibility="Collapsed"
+                VerticalAlignment="Center"
+                HorizontalAlignment="Center">
+
+            <TextBlock Text="Admin parolini kiriting"
+                   HorizontalAlignment="Center"
+                   Margin="0,0,0,10"/>
+
+            <PasswordBox x:Name="AdminPasswordBox"
+                     Width="200"/>
+
+            <Button Content="Kirish"
+                Click="ConfirmAdminLogin_Click"
+                Margin="0,10,0,0"
+                Width="100"/>
+        </StackPanel>
+
+    </Grid>
+</Window>

@@ -1,6 +1,4 @@
-﻿using DocumentFormat.OpenXml.Drawing.Diagrams;
-using DocumentFormat.OpenXml.Wordprocessing;
-using Microsoft.Data.Sqlite;
+﻿using Microsoft.Data.Sqlite;
 
 namespace ParkingApp.DataBase
 {
@@ -58,7 +56,7 @@ namespace ParkingApp.DataBase
                 {
                     Id = reader.GetInt32(reader.GetOrdinal("Id")),
                     FullName = reader.GetString(reader.GetOrdinal("FullName")),
-                    Apartment = reader.GetString(reader.GetOrdinal("Apartment")),
+                    Apartment = reader.GetString(reader.GetOrdinal("ApartmentNumber")),
                     CarNumber = reader.GetString(reader.GetOrdinal("CarNumber"))
                 };
             }
@@ -75,16 +73,16 @@ namespace ParkingApp.DataBase
             connection.Open();
 
             using var command = connection.CreateCommand();
-            command.CommandText = @"SELECT Id, FullName, Aparment, CarNumber FROM Residents;";
+            command.CommandText = @"SELECT Id, FullName, ApartmentNumber, CarNumber FROM Residents;";
 
             using var reader = command.ExecuteReader();
-            if (reader.Read())
+            while (reader.Read())
             {
                 var Residents = new Resident
                 {
                     Id = reader.GetInt32(reader.GetOrdinal("Id")),
                     FullName = reader.GetString(reader.GetOrdinal("FullName")),
-                    Apartment = reader.GetString(reader.GetOrdinal("Apartment")),
+                    Apartment = reader.GetString(reader.GetOrdinal("ApartmentNumber")),
                     CarNumber = reader.GetString(reader.GetOrdinal("CarNumber"))
                 };
                 result.Add(Residents);
