@@ -1,16 +1,15 @@
 ﻿using OpenCvSharp;
-using OpenCvSharp.WpfExtensions;
 using System.Windows;
+using OpenCvSharp.WpfExtensions;
+using Point = OpenCvSharp.Point;
 
 namespace ParkingApp
 {
-    /// <summary>
-    /// Interaction logic for MainWindow.xaml
-    /// </summary>
     public partial class MainWindow : System.Windows.Window
     {
         private VideoCapture? _capture;
         private CancellationTokenSource? _cts;
+        private readonly PlateDetector _plateDetector = new();
         public MainWindow()
         {
             InitializeComponent();
@@ -38,7 +37,7 @@ namespace ParkingApp
 
                     var bitmap = frame.ToBitmapSource();
                     bitmap.Freeze();
-                        
+
                     Dispatcher.Invoke(() =>
                     {
                         CameraView.Source = bitmap;
@@ -54,13 +53,44 @@ namespace ParkingApp
             _cts?.Cancel();
             _capture?.Release();
             _capture?.Dispose();
-            base.OnClosed(e);
             _capture = null;
 
             CameraView.Source = null;
 
             StartCameraButton.IsEnabled = true;
             StopCameraButton.IsEnabled = false;
+        }
+    }
+    public class PlateDetector
+    {
+        public List<Mat> FindPlateCandidates(Mat frame)
+        {
+            var candidates = new List<Mat>();
+
+            Mat gray = new Mat();
+            Cv2.CvtColor(frame, gray, ColorConversionCodes.BGR2GRAY);
+
+            Mat filtered = new Mat();
+            Cv2.BilateralFilter(gray, filtered, 11, 17, 17);
+
+            Mat edged = new Mat();
+            Cv2.Canny(filtered, edged, 30, 200); 
+
+            Cv2.FindContours(edged, out Point[][] contours, out HierarchyIndex[] hierarchy,
+                RetrievalModes.List, ContourApproximationModes.ApproxSimple);
+
+            foreach (var contour in contours)
+            {
+                OpenCvSharp.Rect rect = Cv2.BoundingRect(contour);
+                double aspectRatio = (double)rect.Width / rect.Height;
+
+                if (aspectRatio > 2.0 && aspectRatio < 5.5 && rect.Width > 80)
+                {
+                    Mat cropped = new Mat(frame, rect); // asl (rangli) kadrdan kesib olamiz
+                    candidates.Add(cropped.Clone());
+                }
+            }
+            return candidates;
         }
     }
 }
