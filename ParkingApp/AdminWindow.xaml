@@ -9,36 +9,64 @@
         Background="#F5F5F5">
 
     <Window.Resources>
+        <!-- Standart tugma uslubi -->
         <Style TargetType="Button">
             <Setter Property="Background" Value="#2563EB"/>
             <Setter Property="Foreground" Value="White"/>
             <Setter Property="FontSize" Value="14"/>
-            <Setter Property="Padding" Value="16,8"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Padding" Value="16,10"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Cursor" Value="Hand"/>
         </Style>
     </Window.Resources>
 
-    <Grid Margin="20">
+    <Grid Margin="24">
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <TextBlock Grid.Row="0" Text="Parking Access Control"
-                   FontSize="24" FontWeight="Bold" Margin="0,0,0,20"/>
-
-        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,15">
-            <Button x:Name="StartCameraButton" Content="Kamerani ishga tushirish" Click="StartCameraButton_Click"/>
-            <TextBlock x:Name="MyTextBlock" Text="" VerticalAlignment="Center" Margin="15,0,0,0"/>
-            <Button Content="Rezidentlarni boshqarish" Click="AdminButton_Click" Margin="10,0,0,0"/>
-            <Button x:Name="StopCameraButton" Content="To'xtatish" Margin="10,0,0,0" Click="StopCameraButton_Click" IsEnabled="False"/>
-            <TextBlock x:Name="PlateTextBlock" VerticalAlignment="Center" FontSize="18" FontWeight="Bold" Foreground="Green" Margin="20,0,0,0"/>
-            <TextBlock x:Name="StatusTextBlock" FontSize="18" FontWeight="Bold" Margin="0,10,0,0"/>
+        <!-- Sarlavha -->
+        <StackPanel Grid.Row="0" Margin="0,0,0,4">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="🅿️" FontSize="26" Margin="0,0,10,0"/>
+                <TextBlock Text="Parking Access Control"
+                   FontSize="24" FontWeight="Bold" Foreground="#111827"/>
+            </StackPanel>
+            <TextBlock Text="Admin panel" FontSize="13" Foreground="#6B7280"
+               Margin="36,2,0,0"/>
         </StackPanel>
 
-        <Border Grid.Row="2" BorderBrush="#D1D5DB" BorderThickness="1" CornerRadius="6" Background="Black">
+        <!-- Boshqaruv tugmalari -->
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,20,0,15">
+            <Button x:Name="StartCameraButton" Content="▶  Kamerani ishga tushirish"
+                    Click="StartCameraButton_Click" Background="#10B981"/>
+            <Button x:Name="StopCameraButton" Content="⏹  To'xtatish"
+                    Margin="10,0,0,0" Click="StopCameraButton_Click"
+                    IsEnabled="False" Background="#EF4444"/>
+            <Button Content="👥  Rezidentlarni boshqarish"
+                    Click="AdminButton_Click" Margin="10,0,0,0" Background="#4B5563"/>
+        </StackPanel>
+
+        <!-- Natija paneli -->
+        <Border Grid.Row="2" Background="White" CornerRadius="8"
+                BorderBrush="#E5E7EB" BorderThickness="1" Padding="16,12" Margin="0,0,0,15">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="Aniqlangan raqam:" FontSize="14" Foreground="#6B7280"
+                           VerticalAlignment="Center"/>
+                <TextBlock x:Name="PlateTextBlock" VerticalAlignment="Center"
+                           FontSize="18" FontWeight="Bold" Foreground="#111827" Margin="8,0,0,0"/>
+                <TextBlock x:Name="MyTextBlock" Text="" VerticalAlignment="Center" Margin="20,0,0,0"/>
+                <TextBlock x:Name="StatusTextBlock" FontSize="16" FontWeight="Bold"
+                           VerticalAlignment="Center" Margin="20,0,0,0"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Kamera ko'rinishi -->
+        <Border Grid.Row="3" BorderBrush="#D1D5DB" BorderThickness="1" CornerRadius="10" Background="Black">
             <Image x:Name="CameraView" Stretch="Uniform"/>
         </Border>
     </Grid>

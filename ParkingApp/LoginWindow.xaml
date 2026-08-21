@@ -3,10 +3,23 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="LoginWindow"
         Height="488"
-        Width="899">
+        Width="899"
+        Background="#F5F5F5">
+
+    <Window.Resources>
+        <!-- Barcha tugmalar uchun umumiy uslub -->
+        <Style TargetType="Button">
+            <Setter Property="Background" Value="#2563EB"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontSize" Value="15"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Padding" Value="0,10"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+    </Window.Resources>
 
     <Grid>
-
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
@@ -18,18 +31,35 @@
                 VerticalAlignment="Center"
                 HorizontalAlignment="Center">
 
-            <TextBlock Text="Kim sifatida kirmoqchisiz?"
+            <Image Source="Images/admin-icon.jpg" Width="140" Height="140"
+                   Stretch="UniformToFill" Margin="0,0,0,20">
+                <Image.Clip>
+                    <EllipseGeometry Center="70,70" RadiusX="70" RadiusY="70"/>
+                </Image.Clip>
+            </Image>
+
+            <TextBlock Text="Parking Access Control"
+                   FontSize="26" FontWeight="Bold"
+                   Foreground="#111827"
                    HorizontalAlignment="Center"/>
 
-            <Button Content="Admin"
-                Click="AdminButton_Click"
-                Margin="0,10,0,0"
-                Width="200"/>
+            <TextBlock Text="Kim sifatida kirmoqchisiz?"
+                   FontSize="15"
+                   Foreground="#6B7280"
+                   HorizontalAlignment="Center"
+                   Margin="0,6,0,25"/>
 
-            <Button Content="Rezident"
+            <Button Content="👨‍💼  Admin"
+                Click="AdminButton_Click"
+                Margin="0,0,0,10"
+                Width="220"
+                Height="44"/>
+
+            <Button Content="🏠  Rezident"
                 Click="ResidentButton_Click"
-                Margin="0,5,0,0"
-                Width="200"/>
+                Width="220"
+                Height="44"
+                Background="#10B981"/>
 
         </StackPanel>
 
@@ -40,18 +70,27 @@
                 VerticalAlignment="Center"
                 HorizontalAlignment="Center">
 
+            <TextBlock Text="🔒" FontSize="40" HorizontalAlignment="Center" Margin="0,0,0,10"/>
+
             <TextBlock Text="Admin parolini kiriting"
+                   FontSize="17" FontWeight="SemiBold"
+                   Foreground="#111827"
                    HorizontalAlignment="Center"
-                   Margin="0,0,0,10"/>
+                   Margin="0,0,0,15"/>
 
             <PasswordBox x:Name="AdminPasswordBox"
-                     Width="200"/>
+                     Width="220"
+                     Height="36"
+                     FontSize="14"
+                     Padding="8,0"
+                     VerticalContentAlignment="Center"/>
 
             <Button Content="Kirish"
                 Click="ConfirmAdminLogin_Click"
-                Margin="0,10,0,0"
-                Width="100"/>
-        </StackPanel>
+                Margin="0,15,0,0"
+                Width="220"
+                Height="40"/>
 
+        </StackPanel>
     </Grid>
 </Window>

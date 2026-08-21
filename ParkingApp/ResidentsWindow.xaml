@@ -9,7 +9,7 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <StackPanel Grid.Row="0">
+        <StackPanel Grid.Row="0" Margin="0,0,0,213">
             <TextBlock Text="F.I.Sh:"/>
             <TextBox x:Name="FullNameBox" Margin="0,2,0,8"/>
 
@@ -19,11 +19,18 @@
             <TextBlock Text="Mashina raqami:"/>
             <TextBox x:Name="PlateBox" Margin="0,2,0,8"/>
 
-            <Button Content="Qo'shish" Click="AddButton_Click" Margin="0,5,0,0" Width="100" HorizontalAlignment="Left"/>
+            <Button Content="Qo'shish" Click="AddButton_Click" Margin="0,5,0,0" Width="100" HorizontalAlignment="Left" 
+                    Background="#22C55E" Foreground="Black"/>
         </StackPanel>
 
-        <TextBlock Grid.Row="1" Text="Ro'yxat:" FontWeight="Bold" Margin="0,15,0,5"/>
-
-        <ListBox x:Name="ResidentsListBox" Grid.Row="2"/>
+        <DataGrid x:Name="ResidentsDataGrid" AutoGenerateColumns="False" IsReadOnly="True" Margin="0,200,0,17" Grid.RowSpan="3">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Ism" Binding="{Binding FullName}" Width="290"/>
+                <DataGridTextColumn Header="Xonadon" Binding="{Binding Apartment}" Width="290"/>
+                <DataGridTextColumn Header="Mashina raqami" Binding="{Binding CarNumber}" Width="290"/>
+            </DataGrid.Columns>
+        </DataGrid>
+        <Button Content="Tanlanganini o'chirish" Click="DeleteButton_Click" Margin="0,140,0,265" Width="128" HorizontalAlignment="Right"
+                Background="#EF4444"/>
     </Grid>
 </Window>

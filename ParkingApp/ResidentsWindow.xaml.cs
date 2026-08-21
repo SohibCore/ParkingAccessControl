@@ -15,12 +15,12 @@ namespace ParkingApp
         }
         private void RefreshList()
         {
-            _residents = _db.GetAll();
-            ResidentsListBox.Items.Clear();
+            var residents = _db.GetAll();
+            ResidentsDataGrid.ItemsSource = residents;
 
             foreach (var r in _residents)
             {
-                ResidentsListBox.Items.Add($"{r.CarNumber} — {r.FullName} ({r.Apartment}-xonadon)");
+                ResidentsDataGrid.Items.Add($"{r.CarNumber} — {r.FullName} ({r.Apartment}-xonadon)");
             }
         }
         private void AddButton_Click(object sender, RoutedEventArgs e)
@@ -48,6 +48,24 @@ namespace ParkingApp
             catch (Microsoft.Data.Sqlite.SqliteException)
             {
                 MessageBox.Show("Bu mashina raqami allaqachon ro'yxatda bor.");
+            }
+        }
+        private void DeleteButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (ResidentsDataGrid.SelectedItem is Resident selected)
+            {
+                var result = MessageBox.Show(
+                    $"{selected.FullName} ({selected.CarNumber}) O'chirilsinmi ?", "Tasdiqlash :", MessageBoxButton.YesNo);
+
+                if (result == MessageBoxResult.Yes)
+                {
+                    _db.Delete(selected.Id);
+                    RefreshList();
+                }
+            }
+            else
+            {
+                MessageBox.Show("Avval ro'yxatlardan birini tanlashingiz kerak !");
             }
         }
     }
