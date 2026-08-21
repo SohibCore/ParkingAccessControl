@@ -30,13 +30,56 @@ namespace ParkingApp.DataBase
                        CarNumber TEXT NOT NULL,
                        Timestamp TEXT NOT NULL,
                        Granted INTEGER NOT NULL,
-                       ResidentName TEXT,
-                       EventType TEXT NOT NULL
+                       Apartment TEXT,
+                       EventType TEXT
                    );";
 
             logCommand.ExecuteNonQuery();
         }
-        public void LogAccess(s)
+        public void LogAccess(AccessLog access)
+        {
+            using var connection = new SqliteConnection(_connectionString);
+            connection.Open();
+
+            using var command = connection.CreateCommand();
+
+            command.CommandText = @" INSERT INTO AccessLog (CarNumber, Timestamp, Granted, Apartment, EventType)
+                                     VALUES (@car, @time, @granted, @name, @type);";
+
+            command.Parameters.AddWithValue("@car", access.CarNumber);
+            command.Parameters.AddWithValue("@time", DateTime.Now.ToString("O"));
+            command.Parameters.AddWithValue("@granted", access.Granted ? 1 : 0);
+            command.Parameters.AddWithValue("@name", (object?)access.Apartment ?? DBNull.Value);
+            command.Parameters.AddWithValue("@type", access.EventType ?? (object)DBNull.Value
+            );
+
+            command.ExecuteNonQuery();
+        }
+        public List<AccessLog> GetAllLogs()
+        {
+            var logs = new List<AccessLog>();
+
+            using var connection = new SqliteConnection(_connectionString);
+            connection.Open();
+            using var command = connection.CreateCommand();
+            command.CommandText = "SELECT Id, CarNumber, Timestamp, Granted, Apartment, EventType FROM AccessLog ORDER BY Timestamp DESC;";
+
+            using var reader = command.ExecuteReader();
+            while (reader.Read())
+            {
+                logs.Add(new AccessLog
+                {
+                    Id = reader.GetInt32(reader.GetOrdinal("Id")),
+                    CarNumber = reader.GetString(reader.GetOrdinal("CarNumber")),
+                    Timestamp = DateTime.Parse(reader.GetString(reader.GetOrdinal("Timestamp"))),
+                    Granted = reader.GetInt32(reader.GetOrdinal("Granted")) == 1,
+                    Apartment = reader.IsDBNull(reader.GetOrdinal("Apartment")) ? null : reader.GetString(reader.GetOrdinal("Apartment")),
+                    EventType = reader.GetString(reader.GetOrdinal("EventType"))
+                });
+            }
+
+            return logs;
+        }
         public void Add(Resident resident)
         {
             using var connection = new SqliteConnection(_connectionString);
@@ -59,7 +102,7 @@ namespace ParkingApp.DataBase
             connetion.Open();
 
             using var command = connetion.CreateCommand();
-            command.CommandText = @"SELECT FullName, ApartmentNumber FROM Residents WHERE CarNumber = @plate;";
+            command.CommandText = @"SELECT FullName, ApartmentNumber, CarNumber FROM Residents WHERE CarNumber = @plate;";
             command.Parameters.AddWithValue("@plate", normalized);
 
             using var reader = command.ExecuteReader();
@@ -67,7 +110,7 @@ namespace ParkingApp.DataBase
             {
                 return new Resident
                 {
-                    Id = reader.GetInt32(reader.GetOrdinal("Id")),
+                    //Id = reader.GetInt32(reader.GetOrdinal("Id")),
                     FullName = reader.GetString(reader.GetOrdinal("FullName")),
                     Apartment = reader.GetString(reader.GetOrdinal("ApartmentNumber")),
                     CarNumber = reader.GetString(reader.GetOrdinal("CarNumber"))

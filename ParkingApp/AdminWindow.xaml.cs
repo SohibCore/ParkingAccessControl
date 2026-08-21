@@ -8,12 +8,15 @@ namespace ParkingApp
 {
     public partial class AdminWindow : System.Windows.Window
     {
-        private VideoCapture? _capture;
+        private VideoCapture? _entryCapture;
+        private VideoCapture? _exitCapture;
         private string? _lastDetectedPlate;
-        private CancellationTokenSource? _cts;
+        private CancellationTokenSource? _entryCts;
+        private CancellationTokenSource? _exitCts;
         private readonly DatabaseService _db = new();
         private readonly OcrService _ocrService = new();
         private readonly PlateDetector _plateDetector = new();
+        private readonly object _ocrLock = new object();
         private DateTime _lastDetectedTime = DateTime.MinValue;
 
         public AdminWindow()
@@ -26,25 +29,31 @@ namespace ParkingApp
             window.Owner = this;
             window.ShowDialog();
         }
-        private void StartCameraButton_Click(object sender, RoutedEventArgs e)
+        private void ShowAccessLogButton_Click(object sender, RoutedEventArgs e)
         {
-            _capture = new VideoCapture(0);
+            var window = new AccessLogWindow();
+            window.Owner = this;
+            window.ShowDialog();
+        }
+        private void StartEntryCameraButton_Click(object sender, RoutedEventArgs e)
+        {
+            _entryCapture = new VideoCapture(0);
 
-            if (!_capture.IsOpened())
+            if (!_entryCapture.IsOpened())
             {
-                MessageBox.Show("Kamera ochilmadi");
+                MessageBox.Show("Kirish kamerasi ochilmadi");
                 return;
             }
 
-            _cts = new CancellationTokenSource();
-            var token = _cts.Token;
+            _entryCts = new CancellationTokenSource();
+            var token = _entryCts.Token;
 
             Task.Run(() =>
             {
                 var frame = new Mat();
                 while (!token.IsCancellationRequested)
                 {
-                    _capture.Read(frame);
+                    _entryCapture.Read(frame);
                     if (frame.Empty()) continue;
 
                     var rects = _plateDetector.FindPlateRects(frame);
@@ -52,7 +61,12 @@ namespace ParkingApp
                     foreach (var rect in rects)
                     {
                         using var cropped = new Mat(frame, rect);
-                        var text = _ocrService.ReadText(cropped);
+
+                        string? text;
+                        lock (_ocrLock)
+                        {
+                            text = _ocrService.ReadText(cropped);
+                        }
 
                         if (!string.IsNullOrWhiteSpace(text) && text.Length >= 5 && text.Length <= 9)
                         {
@@ -61,6 +75,22 @@ namespace ParkingApp
 
                             var resident = _db.GetByCarNumber(text);
 
+                            var log = new AccessLog
+                            {
+                                CarNumber = text,
+                                Timestamp = DateTime.Now,
+                                Granted = resident != null,
+                                Apartment = resident?.FullName!,
+                                EventType = "IN"
+                            };
+                            try
+                            {
+                                _db.LogAccess(log);
+                            }
+                            catch (Exception ex)
+                            {
+                                Dispatcher.Invoke(() => MessageBox.Show($"LogAccess xatosi: {ex.Message}"));
+                            }
                             Scalar color = resident != null ? Scalar.LimeGreen : Scalar.Red;
                             Cv2.Rectangle(frame, rect, Scalar.LimeGreen, 2);
                             Cv2.PutText(frame, text, new Point(rect.X, rect.Y - 10),
@@ -85,7 +115,7 @@ namespace ParkingApp
 
                     Dispatcher.Invoke(() =>
                     {
-                        CameraView.Source = bitmap;
+                        EntryCameraView.Source = bitmap;
 
                         if (_lastDetectedPlate != null && (DateTime.Now - _lastDetectedTime).TotalSeconds < 3)
                         {
@@ -98,16 +128,97 @@ namespace ParkingApp
             StartCameraButton.IsEnabled = false;
             StopCameraButton.IsEnabled = true;
         }
+        private void StartExitCameraButton_Click(object sender, RoutedEventArgs e)
+        {
+            _exitCapture = new VideoCapture(1);
+
+            if (!_exitCapture.IsOpened())
+            {
+                MessageBox.Show("Chiqish kamerasi ochilmadi");
+                return;
+            }
+
+            _exitCts = new CancellationTokenSource();
+            var token = _exitCts.Token;
+
+            Task.Run(() =>
+            {
+                var frame = new Mat();
+                while (!token.IsCancellationRequested)
+                {
+                    _exitCapture.Read(frame);
+                    if (frame.Empty()) continue;
+
+                    var rects = _plateDetector.FindPlateRects(frame);
+
+                    foreach (var rect in rects)
+                    {
+                        using var cropped = new Mat(frame, rect);
+                        string? text;
+                        lock (_ocrLock)
+                        {
+                            text = _ocrService.ReadText(cropped);
+                        }
+                        if (!string.IsNullOrWhiteSpace(text) && text.Length >= 5 && text.Length <= 9)
+                        {
+                            _lastDetectedPlate = text;
+                            _lastDetectedTime = DateTime.Now;
+
+                            var resident = _db.GetByCarNumber(text);
+
+                            var log = new AccessLog
+                            {
+                                CarNumber = text,
+                                Timestamp = DateTime.Now,
+                                Granted = resident != null,
+                                Apartment = resident?.Apartment,
+                                EventType = "OUT"
+                            };
+                            _db.LogAccess(log);
+                            Scalar color = resident != null ? Scalar.LimeGreen : Scalar.Red;
+                            Cv2.Rectangle(frame, rect, Scalar.LimeGreen, 2);
+                            Cv2.PutText(frame, text, new Point(rect.X, rect.Y - 10),
+                                HersheyFonts.HersheySimplex, 0.8, Scalar.LimeGreen, 2);
+
+                            Dispatcher.Invoke(() =>
+                            {
+                                if (resident != null)
+                                {
+                                    StatusTextBlock.Text = $"✅ RUXSAT: {resident.FullName} ({resident.Apartment} - xonadon)";
+                                }
+                                else
+                                {
+                                    StatusTextBlock.Text = $"⛔ RAD ETILDI: {text} ro'yxatda yo'q";
+                                }
+                            });
+                        }
+                    }
+                    var bitmap = frame.ToBitmapSource();
+                    bitmap.Freeze();
+
+                    Dispatcher.Invoke(() =>
+                    {
+                        ExitCameraView.Source = bitmap;
+
+                        if (_lastDetectedPlate != null && (DateTime.Now - _lastDetectedTime).TotalSeconds < 3)
+                        {
+                            PlateTextBlock.Text = $"Aniqlangan: {_lastDetectedPlate}";
+                        }
+                    });
+                }
+            }, token);
+        }
         private void StopCameraButton_Click(object sender, RoutedEventArgs e)
         {
-            _cts?.Cancel();
-            _capture?.Release();
-            _capture?.Dispose();
+            _entryCts?.Cancel();
+            _entryCapture?.Release();
+            _entryCapture?.Dispose();
             _ocrService.Dispose();
             base.OnClosed(e);
-            _capture = null;
+            _entryCapture = null;
 
-            CameraView.Source = null;
+            EntryCameraView.Source = null;
+            ExitCameraView.Source = null;
 
             StartCameraButton.IsEnabled = true;
             StopCameraButton.IsEnabled = false;

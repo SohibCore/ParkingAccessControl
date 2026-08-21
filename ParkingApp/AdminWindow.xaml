@@ -43,12 +43,14 @@
         <!-- Boshqaruv tugmalari -->
         <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,20,0,15">
             <Button x:Name="StartCameraButton" Content="▶  Kamerani ishga tushirish"
-                    Click="StartCameraButton_Click" Background="#10B981"/>
+                    Click="StartEntryCameraButton_Click" Background="#10B981"/>
             <Button x:Name="StopCameraButton" Content="⏹  To'xtatish"
                     Margin="10,0,0,0" Click="StopCameraButton_Click"
                     IsEnabled="False" Background="#EF4444"/>
             <Button Content="👥  Rezidentlarni boshqarish"
                     Click="AdminButton_Click" Margin="10,0,0,0" Background="#4B5563"/>
+            <Button Content="📋  Kirish-chiqish tarixi" Click="ShowAccessLogButton_Click" 
+                    Margin="10,0,0,0" Background="#4B5563"/>
         </StackPanel>
 
         <!-- Natija paneli -->
@@ -66,8 +68,65 @@
         </Border>
 
         <!-- Kamera ko'rinishi -->
-        <Border Grid.Row="3" BorderBrush="#D1D5DB" BorderThickness="1" CornerRadius="10" Background="Black">
-            <Image x:Name="CameraView" Stretch="Uniform"/>
-        </Border>
+        <Grid Grid.Row="3">
+
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Kirish KAMERA -->
+            <Border Grid.Column="0"
+            BorderBrush="#D1D5DB"
+            BorderThickness="1"
+            CornerRadius="10"
+            Background="Black"
+            Margin="0,0,8,0">
+
+                <Grid>
+
+                    <TextBlock Text="KIRISH KAMERA"
+                       Foreground="White"
+                       FontSize="15"
+                       FontWeight="Bold"
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Top"
+                       Margin="0,10,0,0"/>
+
+                    <Image x:Name="EntryCameraView"
+                   Stretch="Uniform"/>
+
+                </Grid>
+
+            </Border>
+
+            <!-- Chiqish KAMERA -->
+            <Border Grid.Column="1"
+            BorderBrush="#D1D5DB"
+            BorderThickness="1"
+            CornerRadius="10"
+            Background="Black"
+            Margin="8,0,0,0">
+
+                <Grid>
+
+                    <TextBlock Text="CHIQISH KAMERA"
+                       Foreground="White"
+                       FontSize="15"
+                       FontWeight="Bold"
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Top"
+                       Margin="0,10,0,0"/>
+
+                    <Image x:Name="ExitCameraView"
+                   Stretch="Uniform"/>
+
+                </Grid>
+                
+            </Border>
+
+        </Grid>
+        
     </Grid>
+    
 </Window>
