@@ -17,7 +17,10 @@ namespace ParkingApp
         private readonly OcrService _ocrService = new();
         private readonly PlateDetector _plateDetector = new();
         private readonly object _ocrLock = new object();
+        private DateTime _lastGrantedTime = DateTime.MinValue;
+        private DateTime _lastDeniedTime = DateTime.MinValue;
         private DateTime _lastDetectedTime = DateTime.MinValue;
+        private DateTime _lastExitGrantedTime = DateTime.MinValue;
 
         public AdminWindow()
         {
@@ -68,11 +71,13 @@ namespace ParkingApp
                             text = _ocrService.ReadText(cropped);
                         }
 
-                        if (!string.IsNullOrWhiteSpace(text) && text.Length >= 5 && text.Length <= 9)
-                        {
-                            _lastDetectedPlate = text;
-                            _lastDetectedTime = DateTime.Now;
+                        if (string.IsNullOrWhiteSpace(text)) continue;
 
+                        bool hasDigit = text.Any(char.IsDigit);
+                        bool hasLetter = text.Any(char.IsLetter);
+
+                        if (text.Length >= 5 && text.Length <= 9 && hasDigit && hasLetter)
+                        {
                             var resident = _db.GetByCarNumber(text);
 
                             var log = new AccessLog
@@ -83,18 +88,31 @@ namespace ParkingApp
                                 Apartment = resident?.FullName!,
                                 EventType = "IN"
                             };
-                            try
+
+                            if (resident != null)
                             {
-                                _db.LogAccess(log);
+                                bool tooSoon = (DateTime.Now - _lastGrantedTime).TotalSeconds < 5;
+                                if (!tooSoon)
+                                {
+                                    try
+                                    {
+                                        _db.LogAccess(log);
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        Dispatcher.Invoke(() => MessageBox.Show($"LogAccess xatosi: {ex.Message}"));
+                                    }
+                                    _lastGrantedTime = DateTime.Now;
+                                }
                             }
-                            catch (Exception ex)
-                            {
-                                Dispatcher.Invoke(() => MessageBox.Show($"LogAccess xatosi: {ex.Message}"));
-                            }
+
+                            _lastDetectedPlate = text;
+                            _lastDetectedTime = DateTime.Now;
+
                             Scalar color = resident != null ? Scalar.LimeGreen : Scalar.Red;
-                            Cv2.Rectangle(frame, rect, Scalar.LimeGreen, 2);
+                            Cv2.Rectangle(frame, rect, color, 2);
                             Cv2.PutText(frame, text, new Point(rect.X, rect.Y - 10),
-                                HersheyFonts.HersheySimplex, 0.8, Scalar.LimeGreen, 2);
+                                HersheyFonts.HersheySimplex, 0.8, color, 2);
 
                             Dispatcher.Invoke(() =>
                             {
@@ -154,16 +172,20 @@ namespace ParkingApp
                     foreach (var rect in rects)
                     {
                         using var cropped = new Mat(frame, rect);
+
                         string? text;
                         lock (_ocrLock)
                         {
                             text = _ocrService.ReadText(cropped);
                         }
-                        if (!string.IsNullOrWhiteSpace(text) && text.Length >= 5 && text.Length <= 9)
-                        {
-                            _lastDetectedPlate = text;
-                            _lastDetectedTime = DateTime.Now;
 
+                        if (string.IsNullOrWhiteSpace(text)) continue;
+
+                        bool hasDigit = text.Any(char.IsDigit);
+                        bool hasLetter = text.Any(char.IsLetter);
+
+                        if (text.Length >= 5 && text.Length <= 9 && hasDigit && hasLetter)
+                        {
                             var resident = _db.GetByCarNumber(text);
 
                             var log = new AccessLog
@@ -171,20 +193,41 @@ namespace ParkingApp
                                 CarNumber = text,
                                 Timestamp = DateTime.Now,
                                 Granted = resident != null,
-                                Apartment = resident?.Apartment,
+                                Apartment = resident?.FullName!,
                                 EventType = "OUT"
                             };
-                            _db.LogAccess(log);
+
+                            // Faqat RUXSAT berilgan holatlar loglanadi
+                            if (resident != null)
+                            {
+                                bool tooSoon = (DateTime.Now - _lastExitGrantedTime).TotalSeconds < 5;
+                                if (!tooSoon)
+                                {
+                                    try
+                                    {
+                                        _db.LogAccess(log);
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        Dispatcher.Invoke(() => MessageBox.Show($"LogAccess xatosi: {ex.Message}"));
+                                    }
+                                    _lastExitGrantedTime = DateTime.Now;
+                                }
+                            }
+
+                            _lastDetectedPlate = text;
+                            _lastDetectedTime = DateTime.Now;
+
                             Scalar color = resident != null ? Scalar.LimeGreen : Scalar.Red;
-                            Cv2.Rectangle(frame, rect, Scalar.LimeGreen, 2);
+                            Cv2.Rectangle(frame, rect, color, 2);
                             Cv2.PutText(frame, text, new Point(rect.X, rect.Y - 10),
-                                HersheyFonts.HersheySimplex, 0.8, Scalar.LimeGreen, 2);
+                                HersheyFonts.HersheySimplex, 0.8, color, 2);
 
                             Dispatcher.Invoke(() =>
                             {
                                 if (resident != null)
                                 {
-                                    StatusTextBlock.Text = $"✅ RUXSAT: {resident.FullName} ({resident.Apartment} - xonadon)";
+                                    StatusTextBlock.Text = $"✅ RUXSAT: {resident.FullName} ({resident.Apartment}-xonadon)";
                                 }
                                 else
                                 {
@@ -193,6 +236,7 @@ namespace ParkingApp
                             });
                         }
                     }
+
                     var bitmap = frame.ToBitmapSource();
                     bitmap.Freeze();
 

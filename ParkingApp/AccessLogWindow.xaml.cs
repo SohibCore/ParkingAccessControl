@@ -15,6 +15,7 @@ namespace ParkingApp
         public AccessLogWindow()
         {
             InitializeComponent();
+            LoadLogs();
         }
         private void LoadLogs()
         {
