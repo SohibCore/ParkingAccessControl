@@ -23,7 +23,20 @@ namespace ParkingApp.DataBase
                 );";
 
             command.ExecuteNonQuery();
+
+            using var logCommand = connection.CreateCommand();
+            logCommand.CommandText = @"CREATE TABLE IF NOT EXISTS AccessLog (
+                       Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                       CarNumber TEXT NOT NULL,
+                       Timestamp TEXT NOT NULL,
+                       Granted INTEGER NOT NULL,
+                       ResidentName TEXT,
+                       EventType TEXT NOT NULL
+                   );";
+
+            logCommand.ExecuteNonQuery();
         }
+        public void LogAccess(s)
         public void Add(Resident resident)
         {
             using var connection = new SqliteConnection(_connectionString);
