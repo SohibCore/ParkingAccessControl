@@ -32,6 +32,7 @@ Kichik va o'rta turar-joy majmualarida (dom, kottej qishlog'i va h.k.) ruxsatsiz
 ## 🖥️ Ekran ko'rinishlari
 
 <img width="1913" height="885" alt="image" src="https://github.com/user-attachments/assets/eb6ceb75-1ee0-4860-8642-fdac3daba612" />
+<img width="1919" height="907" alt="image" src="https://github.com/user-attachments/assets/8e084a47-4296-4bc6-aaae-2de1844187f1" />
 
 ## 🏗️ Arxitektura
 
