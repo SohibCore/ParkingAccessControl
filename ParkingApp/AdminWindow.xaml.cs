@@ -1,8 +1,10 @@
 ﻿using OpenCvSharp;
-using System.Windows;
-using ParkingApp.DataBase;
 using OpenCvSharp.WpfExtensions;
+using ParkingApp.DataBase;
+using System.IO.Ports;
+using System.Windows;
 using Point = OpenCvSharp.Point;
+using System.IO;
 
 namespace ParkingApp
 {
@@ -11,6 +13,7 @@ namespace ParkingApp
         private VideoCapture? _entryCapture;
         private VideoCapture? _exitCapture;
         private string? _lastDetectedPlate;
+        private SerialPort? _arduinoPort;
         private CancellationTokenSource? _entryCts;
         private CancellationTokenSource? _exitCts;
         private readonly DatabaseService _db = new();
@@ -25,6 +28,20 @@ namespace ParkingApp
         public AdminWindow()
         {
             InitializeComponent();
+            ConnectArduino();
+        }
+        private void ConnectArduino()
+        {
+            string portName = File.ReadAllText("settings.txt").Trim();
+            _arduinoPort = new SerialPort(portName, 9600);
+            _arduinoPort.Open();
+        }
+        private void OpenBarrier()
+        {
+            if (_arduinoPort != null && _arduinoPort.IsOpen)
+            {
+                _arduinoPort.Write("O");
+            }
         }
         private void AdminButton_Click(object sender, RoutedEventArgs e)
         {
@@ -103,6 +120,7 @@ namespace ParkingApp
                                         Dispatcher.Invoke(() => MessageBox.Show($"LogAccess xatosi: {ex.Message}"));
                                     }
                                     _lastGrantedTime = DateTime.Now;
+                                    OpenBarrier();
                                 }
                             }
 
@@ -148,7 +166,14 @@ namespace ParkingApp
         }
         private void StartExitCameraButton_Click(object sender, RoutedEventArgs e)
         {
-            _exitCapture = new VideoCapture(1);
+            for (int i = 0; i < 500; i++)
+            {
+                using var test = new VideoCapture(i);
+                if (test.IsOpened())
+                {
+                    MessageBox.Show($"Kamera topildi: index {i}");
+                }
+            }
 
             if (!_exitCapture.IsOpened())
             {
