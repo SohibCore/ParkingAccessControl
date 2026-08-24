@@ -1,34 +1,34 @@
-﻿using OpenCvSharp;
-using OpenCvSharp.WpfExtensions;
-using ParkingApp.DataBase;
-using System.IO.Ports;
+﻿using System.IO;
+using OpenCvSharp;
 using System.Windows;
+using System.IO.Ports;
+using ParkingApp.DataBase;
+using OpenCvSharp.WpfExtensions;
 using Point = OpenCvSharp.Point;
-using System.IO;
 
 namespace ParkingApp
 {
     public partial class AdminWindow : System.Windows.Window
     {
-        private VideoCapture? _entryCapture;
+        private SerialPort? _arduinoPort;
         private VideoCapture? _exitCapture;
         private string? _lastDetectedPlate;
-        private SerialPort? _arduinoPort;
-        private CancellationTokenSource? _entryCts;
+        private VideoCapture? _entryCapture;
         private CancellationTokenSource? _exitCts;
+        private CancellationTokenSource? _entryCts;
         private readonly DatabaseService _db = new();
         private readonly OcrService _ocrService = new();
-        private readonly PlateDetector _plateDetector = new();
         private readonly object _ocrLock = new object();
-        private DateTime _lastGrantedTime = DateTime.MinValue;
         private DateTime _lastDeniedTime = DateTime.MinValue;
+        private readonly PlateDetector _plateDetector = new();
+        private DateTime _lastGrantedTime = DateTime.MinValue;
         private DateTime _lastDetectedTime = DateTime.MinValue;
         private DateTime _lastExitGrantedTime = DateTime.MinValue;
 
         public AdminWindow()
         {
             InitializeComponent();
-            ConnectArduino();
+            //ConnectArduino();
         }
         private void ConnectArduino()
         {
@@ -120,7 +120,7 @@ namespace ParkingApp
                                         Dispatcher.Invoke(() => MessageBox.Show($"LogAccess xatosi: {ex.Message}"));
                                     }
                                     _lastGrantedTime = DateTime.Now;
-                                    OpenBarrier();
+                                    //OpenBarrier();
                                 }
                             }
 
