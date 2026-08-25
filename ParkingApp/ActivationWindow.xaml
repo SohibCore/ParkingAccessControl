@@ -1,0 +1,14 @@
+﻿<Window x:Class="ParkingApp.ActivationWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Faollashtirish" Height="357" Width="692"
+        WindowStartupLocation="CenterScreen">
+    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Height="215" Width="430">
+        <TextBlock Text="🔑 Dasturni faollashtirish" FontSize="18" FontWeight="Bold"
+                   HorizontalAlignment="Center" Margin="0,0,0,15"/>
+        <TextBlock Text="Faollashtirish kodini kiriting:" HorizontalAlignment="Center" Margin="0,40,0,10"/>
+        <PasswordBox x:Name="KeyTextBox" Width="250" FontSize="14"/>
+        <Button Content="Faollashtirish" Click="ActivateButton_Click" Width="150" Margin="0,50,0,10"
+                Background="LightBlue"/>
+    </StackPanel>
+</Window>

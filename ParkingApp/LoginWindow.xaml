@@ -4,12 +4,11 @@
         Title="LoginWindow"
         Height="488"
         Width="899"
-        Background="#F5F5F5">
+        Background="#0F172A">
 
     <Window.Resources>
-        <!-- Barcha tugmalar uchun umumiy uslub -->
         <Style TargetType="Button">
-            <Setter Property="Background" Value="#2563EB"/>
+            <Setter Property="Background" Value="#3B82F6"/>
             <Setter Property="Foreground" Value="White"/>
             <Setter Property="FontSize" Value="15"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
@@ -40,12 +39,12 @@
 
             <TextBlock Text="Parking Access Control"
                    FontSize="26" FontWeight="Bold"
-                   Foreground="#111827"
+                   Foreground="#F1F5F9"
                    HorizontalAlignment="Center"/>
 
             <TextBlock Text="Kim sifatida kirmoqchisiz?"
                    FontSize="15"
-                   Foreground="#6B7280"
+                   Foreground="#94A3B8"
                    HorizontalAlignment="Center"
                    Margin="0,6,0,25"/>
 
@@ -74,7 +73,7 @@
 
             <TextBlock Text="Admin parolini kiriting"
                    FontSize="17" FontWeight="SemiBold"
-                   Foreground="#111827"
+                   Foreground="#F1F5F9"
                    HorizontalAlignment="Center"
                    Margin="0,0,0,15"/>
 
@@ -83,6 +82,10 @@
                      Height="36"
                      FontSize="14"
                      Padding="8,0"
+                     Background="#1E293B"
+                     Foreground="#F1F5F9"
+                     BorderBrush="#334155"
+                     CaretBrush="#F1F5F9"
                      VerticalContentAlignment="Center"/>
 
             <Button Content="Kirish"

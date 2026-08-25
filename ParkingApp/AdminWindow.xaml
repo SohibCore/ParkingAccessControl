@@ -6,12 +6,11 @@
         xmlns:local="clr-namespace:ParkingApp"
         mc:Ignorable="d"
         Title="Parking Access Control" Height="700" Width="900"
-        Background="#F5F5F5">
+        Background="#0F172A">
 
     <Window.Resources>
-        <!-- Standart tugma uslubi -->
         <Style TargetType="Button">
-            <Setter Property="Background" Value="#2563EB"/>
+            <Setter Property="Background" Value="#3B82F6"/>
             <Setter Property="Foreground" Value="White"/>
             <Setter Property="FontSize" Value="14"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
@@ -34,99 +33,67 @@
             <StackPanel Orientation="Horizontal">
                 <TextBlock Text="🅿️" FontSize="26" Margin="0,0,10,0"/>
                 <TextBlock Text="Parking Access Control"
-                   FontSize="24" FontWeight="Bold" Foreground="#111827"/>
+                           FontSize="24" FontWeight="Bold" Foreground="#F1F5F9"/>
             </StackPanel>
-            <TextBlock Text="Admin panel" FontSize="13" Foreground="#6B7280"
-               Margin="36,2,0,0"/>
+            <TextBlock Text="Admin panel" FontSize="13" Foreground="#94A3B8"
+                       Margin="36,2,0,0"/>
         </StackPanel>
 
         <!-- Boshqaruv tugmalari -->
         <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,20,0,15">
             <Button x:Name="StartCameraButton" Content="▶  Kamerani ishga tushirish"
-                    Click="StartEntryCameraButton_Click" Background="#10B981"/>
+                    Click="StartEntryCameraButton_Click" Background="#10B981" Width="202"/>
             <Button x:Name="StopCameraButton" Content="⏹  To'xtatish"
                     Margin="10,0,0,0" Click="StopCameraButton_Click"
                     IsEnabled="False" Background="#EF4444"/>
+
+            <Button Content="▶  Chiqish kamerasi"
+            Click="StartExitCameraButton_Click" Margin="20,0,0,0" Background="#10B981"/>
+
             <Button Content="👥  Rezidentlarni boshqarish"
-                    Click="AdminButton_Click" Margin="10,0,0,0" Background="#4B5563"/>
-            <Button Content="📋  Kirish-chiqish tarixi" Click="ShowAccessLogButton_Click" 
-                    Margin="10,0,0,0" Background="#4B5563"/>
+                    Click="AdminButton_Click" Margin="10,0,0,0" Background="#334155"/>
+            <Button Content="📋  Kirish-chiqish tarixi"
+                    Click="ShowAccessLogButton_Click" Margin="10,0,0,0" Background="#334155" Width="107"/>
         </StackPanel>
 
         <!-- Natija paneli -->
-        <Border Grid.Row="2" Background="White" CornerRadius="8"
-                BorderBrush="#E5E7EB" BorderThickness="1" Padding="16,12" Margin="0,0,0,15">
+        <Border Grid.Row="2" Background="#1E293B" CornerRadius="8"
+                BorderBrush="#334155" BorderThickness="1" Padding="16,12" Margin="0,0,0,15">
             <StackPanel Orientation="Horizontal">
-                <TextBlock Text="Aniqlangan raqam:" FontSize="14" Foreground="#6B7280"
+                <TextBlock Text="Aniqlangan raqam:" FontSize="14" Foreground="#94A3B8"
                            VerticalAlignment="Center"/>
                 <TextBlock x:Name="PlateTextBlock" VerticalAlignment="Center"
-                           FontSize="18" FontWeight="Bold" Foreground="#111827" Margin="8,0,0,0"/>
+                           FontSize="18" FontWeight="Bold" Foreground="#F1F5F9" Margin="8,0,0,0"/>
                 <TextBlock x:Name="MyTextBlock" Text="" VerticalAlignment="Center" Margin="20,0,0,0"/>
                 <TextBlock x:Name="StatusTextBlock" FontSize="16" FontWeight="Bold"
-                           VerticalAlignment="Center" Margin="20,0,0,0"/>
+                           VerticalAlignment="Center" Margin="20,0,0,0" Foreground="#F1F5F9"/>
             </StackPanel>
         </Border>
 
         <!-- Kamera ko'rinishi -->
         <Grid Grid.Row="3">
-
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
-            <!-- Kirish KAMERA -->
-            <Border Grid.Column="0"
-            BorderBrush="#D1D5DB"
-            BorderThickness="1"
-            CornerRadius="10"
-            Background="Black"
-            Margin="0,0,8,0">
-
+            <!-- Kirish kamerasi -->
+            <Border Grid.Column="0" BorderBrush="#334155" BorderThickness="1" CornerRadius="10" Background="Black" Margin="0,0,5,0">
                 <Grid>
-
-                    <TextBlock Text="KIRISH KAMERA"
-                       Foreground="White"
-                       FontSize="15"
-                       FontWeight="Bold"
-                       HorizontalAlignment="Center"
-                       VerticalAlignment="Top"
-                       Margin="0,10,0,0"/>
-
-                    <Image x:Name="EntryCameraView"
-                   Stretch="Uniform"/>
-
+                    <Image x:Name="EntryCameraView" Stretch="Uniform"/>
+                    <TextBlock Text="KIRISH KAMERASI" FontSize="12" FontWeight="Bold" Foreground="#F1F5F9"
+                       HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,10,0,0"/>
                 </Grid>
-
             </Border>
 
-            <!-- Chiqish KAMERA -->
-            <Border Grid.Column="1"
-            BorderBrush="#D1D5DB"
-            BorderThickness="1"
-            CornerRadius="10"
-            Background="Black"
-            Margin="8,0,0,0">
-
+            <!-- Chiqish kamerasi -->
+            <Border Grid.Column="1" BorderBrush="#334155" BorderThickness="1" CornerRadius="10" Background="Black" Margin="5,0,0,0">
                 <Grid>
-
-                    <TextBlock Text="CHIQISH KAMERA"
-                       Foreground="White"
-                       FontSize="15"
-                       FontWeight="Bold"
-                       HorizontalAlignment="Center"
-                       VerticalAlignment="Top"
-                       Margin="0,10,0,0"/>
-
-                    <Image x:Name="ExitCameraView"
-                   Stretch="Uniform"/>
-
+                    <Image x:Name="ExitCameraView" Stretch="Uniform"/>
+                    <TextBlock Text="CHIQISH KAMERASI" FontSize="12" FontWeight="Bold" Foreground="#F1F5F9"
+                       HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,10,0,0"/>
                 </Grid>
-                
             </Border>
-
         </Grid>
-        
     </Grid>
-    
 </Window>

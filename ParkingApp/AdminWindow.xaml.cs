@@ -166,14 +166,7 @@ namespace ParkingApp
         }
         private void StartExitCameraButton_Click(object sender, RoutedEventArgs e)
         {
-            for (int i = 0; i < 500; i++)
-            {
-                using var test = new VideoCapture(i);
-                if (test.IsOpened())
-                {
-                    MessageBox.Show($"Kamera topildi: index {i}");
-                }
-            }
+            _exitCapture = new VideoCapture(0);
 
             if (!_exitCapture.IsOpened())
             {
