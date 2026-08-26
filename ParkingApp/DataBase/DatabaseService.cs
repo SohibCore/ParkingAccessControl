@@ -160,6 +160,34 @@ namespace ParkingApp.DataBase
             command.Parameters.AddWithValue("@Id", Id);
             command.ExecuteNonQuery();
         }
+        public void Update(int Id, string? FullName, string? Apartment, string? CarNumber)
+        {
+            using var connection = new SqliteConnection(_connectionString);
+            connection.Open();
+
+            using var command = connection.CreateCommand();
+            var setClauses = new List<string>();
+            if (FullName != null)
+            {
+                setClauses.Add("FullName = @name");
+                command.Parameters.AddWithValue("@name", FullName);
+            }
+            if (Apartment != null)
+            {
+                setClauses.Add("ApartmentNumber = @home");
+                command.Parameters.AddWithValue("@home", Apartment);
+            }
+            if (CarNumber != null)
+            {
+                setClauses.Add("CarNumber = @number");
+                command.Parameters.AddWithValue("@number", CarNumber);
+            }
+
+            command.CommandText = $"UPDATE Residents SET {string.Join(", ", setClauses)} WHERE Id = @Id";
+            command.Parameters.AddWithValue("@Id", Id);
+
+            command.ExecuteNonQuery();
+        }
 
         //Statistika
         public int GetTodayEntryCount()

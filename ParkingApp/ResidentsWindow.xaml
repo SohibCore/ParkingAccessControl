@@ -43,18 +43,20 @@
             <TextBlock Text="Mashina raqami:"/>
             <TextBox x:Name="PlateBox" Margin="0,2,0,8" Width="806"/>
 
-            <Button Content="Qo'shish" Click="AddButton_Click" Margin="0,5,0,0"
+            <Button x:Name="AddButton" Content="Qo'shish" Click="AddButton_Click" Margin="0,5,0,0"
                     Width="100" HorizontalAlignment="Left" Background="#10B981"/>
         </StackPanel>
 
-        <TextBlock Grid.Row="1" Text="RO'YXAT : " FontWeight="Bold"
-                    Foreground="#F1F5F9" HorizontalAlignment="Center"/>
+        <TextBlock Grid.Row="1" Text="Qidirish (Mashina raqami):" 
+           Foreground="#94A3B8" Margin="0,15,0,3"/>
+        <TextBox x:Name="SearchBox" Grid.Row="1" Margin="0,35,0,0" 
+         TextChanged="SearchBox_TextChanged"/>
 
-        <DataGrid x:Name="ResidentsDataGrid" Grid.Row="1" AutoGenerateColumns="False" IsReadOnly="True"
+        <DataGrid x:Name="ResidentsDataGrid" Grid.Row="2" AutoGenerateColumns="False" IsReadOnly="True"
                   Background="#1E293B" Foreground="#F1F5F9"
                   BorderBrush="#334155" BorderThickness="1"
                   RowBackground="#1E293B" AlternatingRowBackground="#243248"
-                  GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#334155" SelectionChanged="ResidentsDataGrid_SelectionChanged" Margin="50,36,50,0" Grid.RowSpan="3">
+                  GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#334155" SelectionChanged="ResidentsDataGrid_SelectionChanged" Margin="50,12,50,0" Grid.RowSpan="2">
             <DataGrid.ColumnHeaderStyle>
                 <Style TargetType="DataGridColumnHeader">
                     <Setter Property="Background" Value="#334155"/>
@@ -73,6 +75,10 @@
 
         <Button Content="O'chirish" Click="DeleteButton_Click"
                 VerticalAlignment="Bottom" Width="100"
-                HorizontalAlignment="Right" Background="#EF4444" Height="33"/>
+                HorizontalAlignment="Right" Background="#EF4444" Height="33" />
+
+        <Button Content="✏️ Tahrirlash" Click="UpdateResidents_Click"
+        VerticalAlignment="Bottom" Width="100"
+        HorizontalAlignment="Center" Background="#F59E0B" Height="33" />
     </Grid>
 </Window>
