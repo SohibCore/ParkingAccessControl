@@ -169,7 +169,7 @@ namespace ParkingApp
         //Kirish kamera
         private void StartEntryCameraButton_Click(object sender, RoutedEventArgs e)
         {
-            _entryCapture = new VideoCapture(0);
+            _entryCapture = new VideoCapture(1);
 
             if (!_entryCapture.IsOpened())
             {
@@ -195,7 +195,7 @@ namespace ParkingApp
         //Chiqish kamera
         private void StartExitCameraButton_Click(object sender, RoutedEventArgs e)
         {
-            _exitCapture = new VideoCapture(1);
+            _exitCapture = new VideoCapture(0);
 
             if (!_exitCapture.IsOpened())
             {

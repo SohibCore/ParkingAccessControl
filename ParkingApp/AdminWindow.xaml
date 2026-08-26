@@ -43,7 +43,7 @@
         <!-- Boshqaruv tugmalari -->
         <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,20,0,15">
             <Button x:Name="StartCameraButton" Content="▶  Kamerani ishga tushirish"
-                    Click="StartEntryCameraButton_Click" Background="#10B981" Width="202"/>
+                    Click="StartEntryCameraButton_Click" Background="#10B981"/>
             <Button x:Name="StopCameraButton" Content="⏹  To'xtatish"
                     Margin="10,0,0,0" Click="StopCameraButton_Click"
                     IsEnabled="False" Background="#EF4444"/>
@@ -52,9 +52,9 @@
             Click="StartExitCameraButton_Click" Margin="20,0,0,0" Background="#10B981"/>
 
             <Button Content="👥  Rezidentlarni boshqarish"
-                    Click="AdminButton_Click" Margin="10,0,0,0" Background="#334155" Width="215"/>
+                    Click="AdminButton_Click" Margin="10,0,0,0" Background="#334155" />
             <Button Content="📋 Tarix"
-                    Click="ShowAccessLogButton_Click" Margin="5,0,0,0" Background="#334155" Width="100"/>
+                    Click="ShowAccessLogButton_Click" Margin="5,0,0,0" Background="#334155" />
         </StackPanel>
 
         <!-- Natija paneli -->

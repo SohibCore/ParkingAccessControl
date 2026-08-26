@@ -17,7 +17,7 @@
                   Background="#1E293B" Foreground="#F1F5F9"
                   BorderBrush="#334155" BorderThickness="1"
                   RowBackground="#1E293B" AlternatingRowBackground="#243248"
-                  GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#334155">
+                  GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#334155" SelectionChanged="LogsDataGrid_SelectionChanged">
             <DataGrid.ColumnHeaderStyle>
                 <Style TargetType="DataGridColumnHeader">
                     <Setter Property="Background" Value="#334155"/>
@@ -27,11 +27,12 @@
                 </Style>
             </DataGrid.ColumnHeaderStyle>
             <DataGrid.Columns>
-                <DataGridTextColumn Header="Vaqt" Binding="{Binding Timestamp}" Width="150"/>
-                <DataGridTextColumn Header="Mashina raqami" Binding="{Binding CarNumber}" Width="130"/>
-                <DataGridTextColumn Header="Turi" Binding="{Binding EventType}" Width="80"/>
-                <DataGridTextColumn Header="Natija" Binding="{Binding Granted}" Width="80"/>
+                <DataGridTextColumn Header="T/r" Binding="{Binding Id}" Width="100" />
+                <DataGridTextColumn Header="Mashina raqami" Binding="{Binding CarNumber}" Width="*"/>
                 <DataGridTextColumn Header="Rezident" Binding="{Binding Apartment}" Width="*"/>
+                <DataGridTextColumn Header="Kirish vaqti" Binding="{Binding EntryTime}" Width="*"/>
+                <DataGridTextColumn Header="Chiqish vaqti" Binding="{Binding ExitTime}" Width="*"/>
+                <DataGridTextColumn Header="Davomiyligi" Binding="{Binding Duration}" Width="*"/>
             </DataGrid.Columns>
         </DataGrid>
     </Grid>

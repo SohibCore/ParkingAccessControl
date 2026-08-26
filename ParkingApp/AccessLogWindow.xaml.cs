@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
+using System.Windows.Controls;
 
 namespace ParkingApp
 {
@@ -22,6 +23,10 @@ namespace ParkingApp
             var logs = _db.GetAllLogs();
             MessageBox.Show($"Bazadan topilgan loglar soni: {logs.Count}");
             LogsDataGrid.ItemsSource = logs;
+            LogsDataGrid.ItemsSource = _db.GetSessions();
+        }
+        private void LogsDataGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
         }
     }
 }

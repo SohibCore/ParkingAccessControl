@@ -84,6 +84,48 @@ namespace ParkingApp.DataBase
             return logs;
         }
 
+        public List<ParkingSession> GetSessions()
+        {
+            var sessions = new List<ParkingSession>();
+
+            using var connection = new SqliteConnection(_connectionString);
+            connection.Open();
+
+            using var command = connection.CreateCommand();
+            command.CommandText = @" SELECT entry.CarNumber, entry.Timestamp AS EntryTime, entry.Apartment,
+            (
+                SELECT MIN(exit1.Timestamp)
+                FROM AccessLog exit1
+                WHERE exit1.CarNumber = entry.CarNumber
+                  AND exit1.EventType = 'OUT'
+                  AND exit1.Timestamp > entry.Timestamp
+            ) AS ExitTime FROM AccessLog entry WHERE entry.EventType = 'IN' ORDER BY entry.Timestamp DESC;";
+
+            using var reader = command.ExecuteReader();
+            while (reader.Read())
+            {
+                var carNumber = reader.GetString(reader.GetOrdinal("CarNumber"));
+                var entryTime = DateTime.Parse(reader.GetString(reader.GetOrdinal("EntryTime")));
+                var apartment = reader.GetString(reader.GetOrdinal("Apartment"));
+
+                DateTime? exitTime = null;
+                int exitOrdinal = reader.GetOrdinal("ExitTime");
+                if (!reader.IsDBNull(exitOrdinal))
+                {
+                    exitTime = DateTime.Parse(reader.GetString(exitOrdinal));
+                }
+
+                sessions.Add(new ParkingSession
+                {
+                    CarNumber = carNumber,
+                    Apartment = apartment,
+                    EntryTime = entryTime,
+                    ExitTime = exitTime
+                });
+            }
+            return sessions;
+        }
+
         // Resident
         public void Add(Resident resident)
         {
