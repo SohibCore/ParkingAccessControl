@@ -83,6 +83,16 @@ namespace ParkingApp.DataBase
 
             return logs;
         }
+        public void DeleteLog(int Id)
+        {
+            using var connection = new SqliteConnection(_connectionString);
+            connection.Open();
+
+            using var command = connection.CreateCommand();
+            command.CommandText = @"DELETE FROM AccessLog WHERE Id = @Id;";
+            command.Parameters.AddWithValue("@Id", Id);
+            command.ExecuteNonQuery();
+        }
 
         public List<ParkingSession> GetSessions()
         {

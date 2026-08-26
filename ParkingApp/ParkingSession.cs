@@ -2,6 +2,7 @@
 {
     public class ParkingSession
     {
+        public int Id { get; set; }
         public string CarNumber { get; set; } = string.Empty;
         public string? Apartment { get; set; }
         public DateTime EntryTime { get; set; }

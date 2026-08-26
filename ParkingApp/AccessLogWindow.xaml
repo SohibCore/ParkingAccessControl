@@ -27,7 +27,6 @@
                 </Style>
             </DataGrid.ColumnHeaderStyle>
             <DataGrid.Columns>
-                <DataGridTextColumn Header="T/r" Binding="{Binding Id}" Width="100" />
                 <DataGridTextColumn Header="Mashina raqami" Binding="{Binding CarNumber}" Width="*"/>
                 <DataGridTextColumn Header="Rezident" Binding="{Binding Apartment}" Width="*"/>
                 <DataGridTextColumn Header="Kirish vaqti" Binding="{Binding EntryTime}" Width="*"/>
@@ -35,5 +34,10 @@
                 <DataGridTextColumn Header="Davomiyligi" Binding="{Binding Duration}" Width="*"/>
             </DataGrid.Columns>
         </DataGrid>
+
+        <Button Content="O'chirish" Click="DeleteButton_Click"
+        VerticalAlignment="Center" Width="100"
+        HorizontalAlignment="Right" Background="#EF4444" Height="24"  />
+
     </Grid>
 </Window>
