@@ -68,5 +68,15 @@ namespace ParkingApp
                 MessageBox.Show("Avval ro'yxatlardan birini tanlashingiz kerak !");
             }
         }
+
+        private void ResidentsDataGrid_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        {
+
+        }
+
+        private void FullNameBox_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
+        {
+
+        }
     }
 }

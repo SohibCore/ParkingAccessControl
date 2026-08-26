@@ -5,6 +5,7 @@ using System.IO.Ports;
 using ParkingApp.DataBase;
 using OpenCvSharp.WpfExtensions;
 using Point = OpenCvSharp.Point;
+using ParkingApp.Services;
 
 namespace ParkingApp
 {
@@ -28,14 +29,11 @@ namespace ParkingApp
         public AdminWindow()
         {
             InitializeComponent();
+            UpdateStatistics();
             //ConnectArduino();
         }
-        private void ConnectArduino()
-        {
-            string portName = File.ReadAllText("settings.txt").Trim();
-            _arduinoPort = new SerialPort(portName, 9600);
-            _arduinoPort.Open();
-        }
+
+        //Shlagbaunni ko'tarish
         private void OpenBarrier()
         {
             if (_arduinoPort != null && _arduinoPort.IsOpen)
@@ -43,18 +41,132 @@ namespace ParkingApp
                 _arduinoPort.Write("O");
             }
         }
+        private void ConnectArduino()
+        {
+            string portName = File.ReadAllText("settings.txt").Trim();
+            _arduinoPort = new SerialPort(portName, 9600);
+            _arduinoPort.Open();
+        }
+
+        //Admin pagega o'tish
         private void AdminButton_Click(object sender, RoutedEventArgs e)
         {
             var window = new ResidentsWindow(_db);
             window.Owner = this;
             window.ShowDialog();
         }
+
+        //Kimligini tasdiqlash
         private void ShowAccessLogButton_Click(object sender, RoutedEventArgs e)
         {
             var window = new AccessLogWindow();
             window.Owner = this;
             window.ShowDialog();
         }
+
+        // Kameralarni boshqarish nechta bo'lishidan qatiy nazar
+        private void RunCameraLoop(VideoCapture capture, CancellationToken token, System.Windows.Controls.Image cameraView, string eventType, Func<DateTime> getLastGrantedTime, Action<DateTime> setLastGrantedTime)
+        {
+            Task.Run(() =>
+            {
+                var frame = new Mat();
+                while (!token.IsCancellationRequested)
+                {
+                    capture.Read(frame);
+                    if (frame.Empty()) continue;
+
+                    var rects = _plateDetector.FindPlateRects(frame);
+
+                    foreach (var rect in rects)
+                    {
+                        using var cropped = new Mat(frame, rect);
+
+                        string? text;
+                        lock (_ocrLock)
+                        {
+                            text = _ocrService.ReadText(cropped);
+                        }
+
+                        if (string.IsNullOrWhiteSpace(text)) continue;
+
+                        bool hasDigit = text.Any(char.IsDigit);
+                        bool hasLetter = text.Any(char.IsLetter);
+
+                        if (text.Length >= 5 && text.Length <= 9 && hasDigit && hasLetter)
+                        {
+                            var resident = _db.GetByCarNumber(text);
+
+                            var log = new AccessLog
+                            {
+                                CarNumber = text,
+                                Timestamp = DateTime.Now,
+                                Granted = resident != null,
+                                Apartment = resident?.FullName!,
+                                EventType = eventType
+                            };
+
+                            if (resident != null)
+                            {
+                                bool tooSoon = (DateTime.Now - getLastGrantedTime()).TotalSeconds < 5;
+                                if (!tooSoon)
+                                {
+                                    try
+                                    {
+                                        _db.LogAccess(log);
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        Dispatcher.Invoke(() => MessageBox.Show($"LogAccess xatosi: {ex.Message}"));
+                                    }
+                                    setLastGrantedTime(DateTime.Now);
+
+                                    if (eventType == "IN")
+                                    {
+                                        OpenBarrier();
+                                    }
+                                }
+                            }
+
+                            _lastDetectedPlate = text;
+                            _lastDetectedTime = DateTime.Now;
+
+                            Scalar color = resident != null ? Scalar.LimeGreen : Scalar.Red;
+                            Cv2.Rectangle(frame, rect, color, 2);
+                            Cv2.PutText(frame, text, new Point(rect.X, rect.Y - 10),
+                                HersheyFonts.HersheySimplex, 0.8, color, 2);
+
+                            Dispatcher.Invoke(() =>
+                            {
+                                UpdateStatistics();
+                                if (resident != null)
+                                {
+                                    StatusTextBlock.Text = $"✅ RUXSAT: {resident.FullName} ({resident.Apartment}-xonadon)";
+                                }
+                                else
+                                {
+                                    StatusTextBlock.Text = $"⛔ RAD ETILDI: {text} ro'yxatda yo'q";
+                                }
+                            });
+                        }
+                    }
+
+                    var bitmap = frame.ToBitmapSource();
+                    bitmap.Freeze();
+
+                    Dispatcher.Invoke(() =>
+                    {
+                        cameraView.Source = bitmap;
+
+                        if (_lastDetectedPlate != null && (DateTime.Now - _lastDetectedTime).TotalSeconds < 3)
+                        {
+                            PlateTextBlock.Text = $"Aniqlangan: {_lastDetectedPlate}";
+                        }
+                    });
+                }
+            }, token);
+        }
+
+        //Kirish kamera
         private void StartEntryCameraButton_Click(object sender, RoutedEventArgs e)
         {
             _entryCapture = new VideoCapture(0);
@@ -66,107 +178,24 @@ namespace ParkingApp
             }
 
             _entryCts = new CancellationTokenSource();
-            var token = _entryCts.Token;
 
-            Task.Run(() =>
-            {
-                var frame = new Mat();
-                while (!token.IsCancellationRequested)
-                {
-                    _entryCapture.Read(frame);
-                    if (frame.Empty()) continue;
-
-                    var rects = _plateDetector.FindPlateRects(frame);
-
-                    foreach (var rect in rects)
-                    {
-                        using var cropped = new Mat(frame, rect);
-
-                        string? text;
-                        lock (_ocrLock)
-                        {
-                            text = _ocrService.ReadText(cropped);
-                        }
-
-                        if (string.IsNullOrWhiteSpace(text)) continue;
-
-                        bool hasDigit = text.Any(char.IsDigit);
-                        bool hasLetter = text.Any(char.IsLetter);
-
-                        if (text.Length >= 5 && text.Length <= 9 && hasDigit && hasLetter)
-                        {
-                            var resident = _db.GetByCarNumber(text);
-
-                            var log = new AccessLog
-                            {
-                                CarNumber = text,
-                                Timestamp = DateTime.Now,
-                                Granted = resident != null,
-                                Apartment = resident?.FullName!,
-                                EventType = "IN"
-                            };
-
-                            if (resident != null)
-                            {
-                                bool tooSoon = (DateTime.Now - _lastGrantedTime).TotalSeconds < 5;
-                                if (!tooSoon)
-                                {
-                                    try
-                                    {
-                                        _db.LogAccess(log);
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        Dispatcher.Invoke(() => MessageBox.Show($"LogAccess xatosi: {ex.Message}"));
-                                    }
-                                    _lastGrantedTime = DateTime.Now;
-                                    //OpenBarrier();
-                                }
-                            }
-
-                            _lastDetectedPlate = text;
-                            _lastDetectedTime = DateTime.Now;
-
-                            Scalar color = resident != null ? Scalar.LimeGreen : Scalar.Red;
-                            Cv2.Rectangle(frame, rect, color, 2);
-                            Cv2.PutText(frame, text, new Point(rect.X, rect.Y - 10),
-                                HersheyFonts.HersheySimplex, 0.8, color, 2);
-
-                            Dispatcher.Invoke(() =>
-                            {
-                                if (resident != null)
-                                {
-                                    StatusTextBlock.Text = $"✅ RUXSAT: {resident.FullName} ({resident.Apartment}-xonadon)";
-                                }
-                                else
-                                {
-                                    StatusTextBlock.Text = $"⛔ RAD ETILDI: {text} ro'yxatda yo'q";
-                                }
-                            });
-                        }
-                    }
-
-                    var bitmap = frame.ToBitmapSource();
-                    bitmap.Freeze();
-
-                    Dispatcher.Invoke(() =>
-                    {
-                        EntryCameraView.Source = bitmap;
-
-                        if (_lastDetectedPlate != null && (DateTime.Now - _lastDetectedTime).TotalSeconds < 3)
-                        {
-                            PlateTextBlock.Text = $"Aniqlangan: {_lastDetectedPlate}";
-                        }
-                    });
-                }
-            }, token);
+            RunCameraLoop(
+                _entryCapture,
+                _entryCts.Token,
+                EntryCameraView,
+                "IN",
+                () => _lastGrantedTime,
+                (value) => _lastGrantedTime = value
+            );
 
             StartCameraButton.IsEnabled = false;
             StopCameraButton.IsEnabled = true;
         }
+
+        //Chiqish kamera
         private void StartExitCameraButton_Click(object sender, RoutedEventArgs e)
         {
-            _exitCapture = new VideoCapture(0);
+            _exitCapture = new VideoCapture(1);
 
             if (!_exitCapture.IsOpened())
             {
@@ -175,101 +204,18 @@ namespace ParkingApp
             }
 
             _exitCts = new CancellationTokenSource();
-            var token = _exitCts.Token;
 
-            Task.Run(() =>
-            {
-                var frame = new Mat();
-                while (!token.IsCancellationRequested)
-                {
-                    _exitCapture.Read(frame);
-                    if (frame.Empty()) continue;
-
-                    var rects = _plateDetector.FindPlateRects(frame);
-
-                    foreach (var rect in rects)
-                    {
-                        using var cropped = new Mat(frame, rect);
-
-                        string? text;
-                        lock (_ocrLock)
-                        {
-                            text = _ocrService.ReadText(cropped);
-                        }
-
-                        if (string.IsNullOrWhiteSpace(text)) continue;
-
-                        bool hasDigit = text.Any(char.IsDigit);
-                        bool hasLetter = text.Any(char.IsLetter);
-
-                        if (text.Length >= 5 && text.Length <= 9 && hasDigit && hasLetter)
-                        {
-                            var resident = _db.GetByCarNumber(text);
-
-                            var log = new AccessLog
-                            {
-                                CarNumber = text,
-                                Timestamp = DateTime.Now,
-                                Granted = resident != null,
-                                Apartment = resident?.FullName!,
-                                EventType = "OUT"
-                            };
-
-                            // Faqat RUXSAT berilgan holatlar loglanadi
-                            if (resident != null)
-                            {
-                                bool tooSoon = (DateTime.Now - _lastExitGrantedTime).TotalSeconds < 5;
-                                if (!tooSoon)
-                                {
-                                    try
-                                    {
-                                        _db.LogAccess(log);
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        Dispatcher.Invoke(() => MessageBox.Show($"LogAccess xatosi: {ex.Message}"));
-                                    }
-                                    _lastExitGrantedTime = DateTime.Now;
-                                }
-                            }
-
-                            _lastDetectedPlate = text;
-                            _lastDetectedTime = DateTime.Now;
-
-                            Scalar color = resident != null ? Scalar.LimeGreen : Scalar.Red;
-                            Cv2.Rectangle(frame, rect, color, 2);
-                            Cv2.PutText(frame, text, new Point(rect.X, rect.Y - 10),
-                                HersheyFonts.HersheySimplex, 0.8, color, 2);
-
-                            Dispatcher.Invoke(() =>
-                            {
-                                if (resident != null)
-                                {
-                                    StatusTextBlock.Text = $"✅ RUXSAT: {resident.FullName} ({resident.Apartment}-xonadon)";
-                                }
-                                else
-                                {
-                                    StatusTextBlock.Text = $"⛔ RAD ETILDI: {text} ro'yxatda yo'q";
-                                }
-                            });
-                        }
-                    }
-
-                    var bitmap = frame.ToBitmapSource();
-                    bitmap.Freeze();
-
-                    Dispatcher.Invoke(() =>
-                    {
-                        ExitCameraView.Source = bitmap;
-
-                        if (_lastDetectedPlate != null && (DateTime.Now - _lastDetectedTime).TotalSeconds < 3)
-                        {
-                            PlateTextBlock.Text = $"Aniqlangan: {_lastDetectedPlate}";
-                        }
-                    });
-                }
-            }, token);
+            RunCameraLoop(
+                _exitCapture,
+                _exitCts.Token,
+                ExitCameraView,
+                "OUT",
+                () => _lastExitGrantedTime,
+                (value) => _lastExitGrantedTime = value
+            );
         }
+
+        //Kirish kamerani tuxtatish
         private void StopCameraButton_Click(object sender, RoutedEventArgs e)
         {
             _entryCts?.Cancel();
@@ -284,6 +230,14 @@ namespace ParkingApp
 
             StartCameraButton.IsEnabled = true;
             StopCameraButton.IsEnabled = false;
+        }
+
+        //Statistikaga yangilanish berish 
+        private void UpdateStatistics()
+        {
+            TodayEntryText.Text = _db.GetTodayEntryCount().ToString();
+            TodayExitText.Text = _db.GetTodayExitCount().ToString();
+            TotalResidentsText.Text = _db.GetTotalResidentsCount().ToString();
         }
     }
     public class PlateDetector
@@ -317,7 +271,7 @@ namespace ParkingApp
             }
             return candidates;
         }
-        public List<OpenCvSharp.Rect> FindPlateRects(Mat frame) //vizual tekshirish
+        public List<OpenCvSharp.Rect> FindPlateRects(Mat frame) //Raqamga o'xshash hududlarni topish
         {
             var rects = new List<OpenCvSharp.Rect>();
 
@@ -347,3 +301,221 @@ namespace ParkingApp
         }
     }
 }
+
+/* private void StartEntryCameraButton_Click(object sender, RoutedEventArgs e)
+ {
+     _entryCapture = new VideoCapture(1);
+
+     if (!_entryCapture.IsOpened())
+     {
+         MessageBox.Show("Kirish kamerasi ochilmadi");
+         return;
+     }
+
+     _entryCts = new CancellationTokenSource();
+     var token = _entryCts.Token;
+
+     Task.Run(() =>
+     {
+         var frame = new Mat();
+         while (!token.IsCancellationRequested)
+         {
+             _entryCapture.Read(frame);
+             if (frame.Empty()) continue;
+
+             var rects = _plateDetector.FindPlateRects(frame);
+
+             foreach (var rect in rects)
+             {
+                 using var cropped = new Mat(frame, rect);
+
+                 string? text;
+                 lock (_ocrLock)
+                 {
+                     text = _ocrService.ReadText(cropped);
+                 }
+
+                 if (string.IsNullOrWhiteSpace(text)) continue;
+
+                 bool hasDigit = text.Any(char.IsDigit);
+                 bool hasLetter = text.Any(char.IsLetter);
+
+                 if (text.Length >= 5 && text.Length <= 9 && hasDigit && hasLetter)
+                 {
+                     var resident = _db.GetByCarNumber(text);
+
+                     var log = new AccessLog
+                     {
+                         CarNumber = text,
+                         Timestamp = DateTime.Now,
+                         Granted = resident != null,
+                         Apartment = resident?.FullName!,
+                         EventType = "IN"
+                     };
+
+                     if (resident != null)
+                     {
+                         bool tooSoon = (DateTime.Now - _lastGrantedTime).TotalSeconds < 5;
+                         if (!tooSoon)
+                         {
+                             try
+                             {
+                                 _db.LogAccess(log);
+                             }
+                             catch (Exception ex)
+                             {
+                                 Dispatcher.Invoke(() => MessageBox.Show($"LogAccess xatosi: {ex.Message}"));
+                             }
+                             _lastGrantedTime = DateTime.Now;
+                             //OpenBarrier();
+                         }
+                     }
+
+                     _lastDetectedPlate = text;
+                     _lastDetectedTime = DateTime.Now;
+
+                     Scalar color = resident != null ? Scalar.LimeGreen : Scalar.Red;
+                     Cv2.Rectangle(frame, rect, color, 2);
+                     Cv2.PutText(frame, text, new Point(rect.X, rect.Y - 10),
+                         HersheyFonts.HersheySimplex, 0.8, color, 2);
+
+                     Dispatcher.Invoke(() =>
+                     {
+                         UpdateStatistics();
+                         if (resident != null)
+                         {
+                             StatusTextBlock.Text = $"✅ RUXSAT: {resident.FullName} ({resident.Apartment}-xonadon)";
+                         }
+                         else
+                         {
+                             StatusTextBlock.Text = $"⛔ RAD ETILDI: {text} ro'yxatda yo'q";
+                         }
+                     });
+                 }
+             }
+
+             var bitmap = frame.ToBitmapSource();
+             bitmap.Freeze();
+
+             Dispatcher.Invoke(() =>
+             {
+                 EntryCameraView.Source = bitmap;
+
+                 if (_lastDetectedPlate != null && (DateTime.Now - _lastDetectedTime).TotalSeconds < 3)
+                 {
+                     PlateTextBlock.Text = $"Aniqlangan: {_lastDetectedPlate}";
+                 }
+             });
+         }
+     }, token);
+
+     StartCameraButton.IsEnabled = false;
+     StopCameraButton.IsEnabled = true;
+ }*/
+/* private void StartExitCameraButton_Click(object sender, RoutedEventArgs e)
+ {
+     _exitCapture = new VideoCapture(0);
+
+     if (!_exitCapture.IsOpened())
+     {
+         MessageBox.Show("Chiqish kamerasi ochilmadi");
+         return;
+     }
+
+     _exitCts = new CancellationTokenSource();
+     var token = _exitCts.Token;
+
+     Task.Run(() =>
+     {
+         var frame = new Mat();
+         while (!token.IsCancellationRequested)
+         {
+             _exitCapture.Read(frame);
+             if (frame.Empty()) continue;
+
+             var rects = _plateDetector.FindPlateRects(frame);
+
+             foreach (var rect in rects)
+             {
+                 using var cropped = new Mat(frame, rect);
+
+                 string? text;
+                 lock (_ocrLock)
+                 {
+                     text = _ocrService.ReadText(cropped);
+                 }
+
+                 if (string.IsNullOrWhiteSpace(text)) continue;
+
+                 bool hasDigit = text.Any(char.IsDigit);
+                 bool hasLetter = text.Any(char.IsLetter);
+
+                 if (text.Length >= 5 && text.Length <= 9 && hasDigit && hasLetter)
+                 {
+                     var resident = _db.GetByCarNumber(text);
+
+                     var log = new AccessLog
+                     {
+                         CarNumber = text,
+                         Timestamp = DateTime.Now,
+                         Granted = resident != null,
+                         Apartment = resident?.FullName!,
+                         EventType = "OUT"
+                     };
+
+                     // Faqat RUXSAT berilgan holatlar loglanadi
+                     if (resident != null)
+                     {
+                         bool tooSoon = (DateTime.Now - _lastExitGrantedTime).TotalSeconds < 5;
+                         if (!tooSoon)
+                         {
+                             try
+                             {
+                                 _db.LogAccess(log);
+                             }
+                             catch (Exception ex)
+                             {
+                                 Dispatcher.Invoke(() => MessageBox.Show($"LogAccess xatosi: {ex.Message}"));
+                             }
+                             _lastExitGrantedTime = DateTime.Now;
+                         }
+                     }
+
+                     _lastDetectedPlate = text;
+                     _lastDetectedTime = DateTime.Now;
+
+                     Scalar color = resident != null ? Scalar.LimeGreen : Scalar.Red;
+                     Cv2.Rectangle(frame, rect, color, 2);
+                     Cv2.PutText(frame, text, new Point(rect.X, rect.Y - 10),
+                         HersheyFonts.HersheySimplex, 0.8, color, 2);
+
+                     Dispatcher.Invoke(() =>
+                     {
+                         UpdateStatistics();
+                         if (resident != null)
+                         {
+                             StatusTextBlock.Text = $"✅ RUXSAT: {resident.FullName} ({resident.Apartment}-xonadon)";
+                         }
+                         else
+                         {
+                             StatusTextBlock.Text = $"⛔ RAD ETILDI: {text} ro'yxatda yo'q";
+                         }
+                     });
+                 }
+             }
+
+             var bitmap = frame.ToBitmapSource();
+             bitmap.Freeze();
+
+             Dispatcher.Invoke(() =>
+             {
+                 ExitCameraView.Source = bitmap;
+
+                 if (_lastDetectedPlate != null && (DateTime.Now - _lastDetectedTime).TotalSeconds < 3)
+                 {
+                     PlateTextBlock.Text = $"Aniqlangan: {_lastDetectedPlate}";
+                 }
+             });
+         }
+     }, token);
+ }*/

@@ -26,6 +26,7 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
         <!-- Sarlavha -->
@@ -51,9 +52,9 @@
             Click="StartExitCameraButton_Click" Margin="20,0,0,0" Background="#10B981"/>
 
             <Button Content="👥  Rezidentlarni boshqarish"
-                    Click="AdminButton_Click" Margin="10,0,0,0" Background="#334155"/>
-            <Button Content="📋  Kirish-chiqish tarixi"
-                    Click="ShowAccessLogButton_Click" Margin="10,0,0,0" Background="#334155" Width="107"/>
+                    Click="AdminButton_Click" Margin="10,0,0,0" Background="#334155" Width="215"/>
+            <Button Content="📋 Tarix"
+                    Click="ShowAccessLogButton_Click" Margin="5,0,0,0" Background="#334155" Width="100"/>
         </StackPanel>
 
         <!-- Natija paneli -->
@@ -95,5 +96,37 @@
                 </Grid>
             </Border>
         </Grid>
+        <!-- Diagnostika -->
+        <UniformGrid Grid.Row="4" Rows="1" Columns="3" Margin="0,15,0,0">
+            <Border Background="#1E293B" CornerRadius="8" Margin="0,0,5,0" Padding="16,12">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="🚗" FontSize="24" VerticalAlignment="Center" Margin="0,0,10,0" Foreground="White"/>
+                    <StackPanel>
+                        <TextBlock x:Name="TodayEntryText" Text="0" FontSize="20" FontWeight="Bold" Foreground="#F1F5F9"/>
+                        <TextBlock Text="Bugungi kirishlar" FontSize="12" Foreground="#94A3B8"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <Border Background="#1E293B" CornerRadius="8" Margin="5,0,5,0" Padding="16,12">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="🚙" FontSize="24" VerticalAlignment="Center" Margin="0,0,10,0" Foreground="White"/>
+                    <StackPanel>
+                        <TextBlock x:Name="TodayExitText" Text="0" FontSize="20" FontWeight="Bold" Foreground="#F1F5F9"/>
+                        <TextBlock Text="Bugungi chiqishlar" FontSize="12" Foreground="#94A3B8"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <Border Background="#1E293B" CornerRadius="8" Margin="5,0,0,0" Padding="16,12">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="👥" FontSize="24" VerticalAlignment="Center" Margin="0,0,10,0" Foreground="White"/>
+                    <StackPanel>
+                        <TextBlock x:Name="TotalResidentsText" Text="0" FontSize="20" FontWeight="Bold" Foreground="#F1F5F9"/>
+                        <TextBlock Text="Jami rezidentlar" FontSize="12" Foreground="#94A3B8"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </UniformGrid>
     </Grid>
 </Window>

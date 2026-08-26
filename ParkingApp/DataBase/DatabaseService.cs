@@ -9,6 +9,7 @@ namespace ParkingApp.DataBase
         {
             CreateTable();
         }
+
         private void CreateTable()
         {
             using var connection = new SqliteConnection(_connectionString);
@@ -36,6 +37,8 @@ namespace ParkingApp.DataBase
 
             logCommand.ExecuteNonQuery();
         }
+
+        //Logs
         public void LogAccess(AccessLog access)
         {
             using var connection = new SqliteConnection(_connectionString);
@@ -80,6 +83,8 @@ namespace ParkingApp.DataBase
 
             return logs;
         }
+
+        // Resident
         public void Add(Resident resident)
         {
             using var connection = new SqliteConnection(_connectionString);
@@ -154,6 +159,40 @@ namespace ParkingApp.DataBase
             command.CommandText = @"DELETE FROM Residents WHERE Id = @Id;";
             command.Parameters.AddWithValue("@Id", Id);
             command.ExecuteNonQuery();
+        }
+
+        //Statistika
+        public int GetTodayEntryCount()
+        {
+            using var connection = new SqliteConnection(_connectionString);
+            connection.Open();
+
+            using var command = connection.CreateCommand();
+            command.CommandText = @"SELECT COUNT(*) FROM AccessLog 
+                             WHERE EventType = 'IN' AND date(Timestamp) = date('now');";
+
+            return Convert.ToInt32(command.ExecuteScalar());
+        }
+        public int GetTodayExitCount()
+        {
+            using var connection = new SqliteConnection(_connectionString);
+            connection.Open();
+
+            using var command = connection.CreateCommand();
+            command.CommandText = @"SELECT COUNT(*) FROM AccessLog 
+                             WHERE EventType = 'OUT' AND date(Timestamp) = date('now');";
+
+            return Convert.ToInt32(command.ExecuteScalar());
+        }
+        public int GetTotalResidentsCount()
+        {
+            using var connection = new SqliteConnection(_connectionString);
+            connection.Open();
+
+            using var command = connection.CreateCommand();
+            command.CommandText = @"SELECT COUNT(*) FROM Residents;";
+
+            return Convert.ToInt32(command.ExecuteScalar());
         }
     }
 }

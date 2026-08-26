@@ -2,7 +2,7 @@
 using System.Text;
 using System.Security.Cryptography;
 
-namespace ParkingApp
+namespace ParkingApp.Services
 {
     public class LicenseService
     {

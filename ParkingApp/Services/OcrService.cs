@@ -1,7 +1,7 @@
-﻿using OpenCvSharp;
-using Tesseract;
+﻿using Tesseract;
+using OpenCvSharp;
 
-namespace ParkingApp
+namespace ParkingApp.Services
 {
     public class OcrService : IDisposable
     {
