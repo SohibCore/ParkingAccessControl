@@ -11,7 +11,7 @@ namespace ParkingApp.Services
             _engine = new TesseractEngine("tessdata", "eng", EngineMode.Default);
             _engine.SetVariable("tessedit_char_whitelist", "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789");
             _engine.DefaultPageSegMode = PageSegMode.SingleLine;
-        }
+        } 
 
         public string? ReadText(Mat plateImage)
         {
