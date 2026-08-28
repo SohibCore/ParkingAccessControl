@@ -3,9 +3,9 @@ using OpenCvSharp;
 using System.Windows;
 using System.IO.Ports;
 using ParkingApp.DataBase;
+using ParkingApp.Services;
 using OpenCvSharp.WpfExtensions;
 using Point = OpenCvSharp.Point;
-using ParkingApp.Services;
 
 namespace ParkingApp
 {
@@ -96,15 +96,6 @@ namespace ParkingApp
                         {
                             var resident = _db.GetByCarNumber(text);
 
-                            var log = new AccessLog
-                            {
-                                CarNumber = text,
-                                Timestamp = DateTime.Now,
-                                Granted = resident != null,
-                                Apartment = resident?.FullName!,
-                                EventType = eventType
-                            };
-
                             if (resident != null)
                             {
                                 bool tooSoon = (DateTime.Now - getLastGrantedTime()).TotalSeconds < 5;
@@ -112,11 +103,14 @@ namespace ParkingApp
                                 {
                                     try
                                     {
-                                        _db.LogAccess(log);
+                                        if (eventType == "IN")
+                                            _db.StartSession(text, resident.FullName, true);
+                                        else
+                                            _db.EndSession(text);
                                     }
                                     catch (Exception ex)
                                     {
-                                        Dispatcher.Invoke(() => MessageBox.Show($"LogAccess xatosi: {ex.Message}"));
+                                        Dispatcher.Invoke(() => MessageBox.Show($"Xatolik: {ex.Message}"));
                                     }
                                     setLastGrantedTime(DateTime.Now);
 

@@ -15,7 +15,7 @@ namespace ParkingApp
         }
         private void LoadLogs()
         {
-            var logs = _db.GetAllLogs();
+            var logs = _db.GetSessions();
             MessageBox.Show($"Bazadan topilgan loglar soni: {logs.Count}");
             LogsDataGrid.ItemsSource = logs;
             LogsDataGrid.ItemsSource = _db.GetSessions();
@@ -23,10 +23,9 @@ namespace ParkingApp
         private void LogsDataGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
         }
-
         private void DeleteButton_Click(object sender, RoutedEventArgs e)
         {
-            if (LogsDataGrid.SelectedItem is AccessLog selected)
+            if (LogsDataGrid.SelectedItem is ParkingSession selected)
             {
                 try
                 {
@@ -38,7 +37,7 @@ namespace ParkingApp
                     if (result == MessageBoxResult.Yes)
                     {
                         _db.DeleteLog(selected.Id);
-                        RefreshList();
+                        LoadLogs();
                     }
                 }
                 catch (Exception ex)
@@ -49,16 +48,6 @@ namespace ParkingApp
             else
             {
                 MessageBox.Show("Avval ro'yxatdan birini tanlashingiz kerak!");
-            }
-        }
-        private void RefreshList()
-        {
-            var residents = _db.GetAll();
-            LogsDataGrid.ItemsSource = residents;
-
-            foreach (var r in _residents)
-            {
-                LogsDataGrid.Items.Add($"{r.CarNumber} — {r.FullName} ({r.Apartment}-xonadon)");
             }
         }
     }

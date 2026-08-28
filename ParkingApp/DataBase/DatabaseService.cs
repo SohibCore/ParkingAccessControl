@@ -26,98 +26,40 @@ namespace ParkingApp.DataBase
             command.ExecuteNonQuery();
 
             using var logCommand = connection.CreateCommand();
-            logCommand.CommandText = @"CREATE TABLE IF NOT EXISTS AccessLog (
+            logCommand.CommandText = @"CREATE TABLE IF NOT EXISTS ParkingSessions (
                        Id INTEGER PRIMARY KEY AUTOINCREMENT,
                        CarNumber TEXT NOT NULL,
-                       Timestamp TEXT NOT NULL,
-                       Granted INTEGER NOT NULL,
                        Apartment TEXT,
-                       EventType TEXT
-                   );";
+                       EntryTime TEXT NOT NULL,
+                       ExitTime TEXT,
+                       Granted INTEGER NOT NULL );";
 
             logCommand.ExecuteNonQuery();
         }
 
         //Logs
-        public void LogAccess(AccessLog access)
-        {
-            using var connection = new SqliteConnection(_connectionString);
-            connection.Open();
-
-            using var command = connection.CreateCommand();
-
-            command.CommandText = @" INSERT INTO AccessLog (CarNumber, Timestamp, Granted, Apartment, EventType)
-                                     VALUES (@car, @time, @granted, @name, @type);";
-
-            command.Parameters.AddWithValue("@car", access.CarNumber);
-            command.Parameters.AddWithValue("@time", DateTime.Now.ToString("O"));
-            command.Parameters.AddWithValue("@granted", access.Granted ? 1 : 0);
-            command.Parameters.AddWithValue("@name", (object?)access.Apartment ?? DBNull.Value);
-            command.Parameters.AddWithValue("@type", access.EventType ?? (object)DBNull.Value
-            );
-
-            command.ExecuteNonQuery();
-        }
-        public List<AccessLog> GetAllLogs()
-        {
-            var logs = new List<AccessLog>();
-
-            using var connection = new SqliteConnection(_connectionString);
-            connection.Open();
-            using var command = connection.CreateCommand();
-            command.CommandText = "SELECT Id, CarNumber, Timestamp, Granted, Apartment, EventType FROM AccessLog ORDER BY Timestamp DESC;";
-
-            using var reader = command.ExecuteReader();
-            while (reader.Read())
-            {
-                logs.Add(new AccessLog
-                {
-                    Id = reader.GetInt32(reader.GetOrdinal("Id")),
-                    CarNumber = reader.GetString(reader.GetOrdinal("CarNumber")),
-                    Timestamp = DateTime.Parse(reader.GetString(reader.GetOrdinal("Timestamp"))),
-                    Granted = reader.GetInt32(reader.GetOrdinal("Granted")) == 1,
-                    Apartment = reader.IsDBNull(reader.GetOrdinal("Apartment")) ? null : reader.GetString(reader.GetOrdinal("Apartment")),
-                    EventType = reader.GetString(reader.GetOrdinal("EventType"))
-                });
-            }
-
-            return logs;
-        }
         public void DeleteLog(int Id)
         {
             using var connection = new SqliteConnection(_connectionString);
             connection.Open();
 
             using var command = connection.CreateCommand();
-            command.CommandText = @"DELETE FROM AccessLog WHERE Id = @Id;";
+            command.CommandText = @"DELETE FROM ParkingSessions WHERE Id = @Id;";
             command.Parameters.AddWithValue("@Id", Id);
             command.ExecuteNonQuery();
         }
-
         public List<ParkingSession> GetSessions()
         {
             var sessions = new List<ParkingSession>();
 
             using var connection = new SqliteConnection(_connectionString);
             connection.Open();
-
             using var command = connection.CreateCommand();
-            command.CommandText = @" SELECT entry.CarNumber, entry.Timestamp AS EntryTime, entry.Apartment,
-            (
-                SELECT MIN(exit1.Timestamp)
-                FROM AccessLog exit1
-                WHERE exit1.CarNumber = entry.CarNumber
-                  AND exit1.EventType = 'OUT'
-                  AND exit1.Timestamp > entry.Timestamp
-            ) AS ExitTime FROM AccessLog entry WHERE entry.EventType = 'IN' ORDER BY entry.Timestamp DESC;";
+            command.CommandText = "SELECT Id, CarNumber, Apartment, EntryTime, ExitTime FROM ParkingSessions ORDER BY EntryTime DESC;";
 
             using var reader = command.ExecuteReader();
             while (reader.Read())
             {
-                var carNumber = reader.GetString(reader.GetOrdinal("CarNumber"));
-                var entryTime = DateTime.Parse(reader.GetString(reader.GetOrdinal("EntryTime")));
-                var apartment = reader.GetString(reader.GetOrdinal("Apartment"));
-
                 DateTime? exitTime = null;
                 int exitOrdinal = reader.GetOrdinal("ExitTime");
                 if (!reader.IsDBNull(exitOrdinal))
@@ -127,13 +69,47 @@ namespace ParkingApp.DataBase
 
                 sessions.Add(new ParkingSession
                 {
-                    CarNumber = carNumber,
-                    Apartment = apartment,
-                    EntryTime = entryTime,
+                    Id = reader.GetInt32(reader.GetOrdinal("Id")),
+                    CarNumber = reader.GetString(reader.GetOrdinal("CarNumber")),
+                    Apartment = reader.IsDBNull(reader.GetOrdinal("Apartment")) ? null : reader.GetString(reader.GetOrdinal("Apartment")),
+                    EntryTime = DateTime.Parse(reader.GetString(reader.GetOrdinal("EntryTime"))),
                     ExitTime = exitTime
                 });
             }
+
             return sessions;
+        }
+        public int StartSession(string carNumber, string? apartment, bool granted)
+        {
+            using var connection = new SqliteConnection(_connectionString);
+            connection.Open();
+            using var command = connection.CreateCommand();
+            command.CommandText = @"INSERT INTO ParkingSessions (CarNumber, Apartment, EntryTime, Granted)
+                             VALUES (@car, @apt, @time, @granted);
+                             SELECT last_insert_rowid();";
+            command.Parameters.AddWithValue("@car", carNumber);
+            command.Parameters.AddWithValue("@apt", (object?)apartment ?? DBNull.Value);
+            command.Parameters.AddWithValue("@time", DateTime.Now.ToString("O"));
+            command.Parameters.AddWithValue("@granted", granted ? 1 : 0);
+
+            return Convert.ToInt32(command.ExecuteScalar());
+        }
+        public void EndSession(string carNumber)
+        {
+            using var connection = new SqliteConnection(_connectionString);
+            connection.Open();
+            using var command = connection.CreateCommand();
+            command.CommandText = @"
+                    UPDATE ParkingSessions 
+                    SET ExitTime = @time
+                    WHERE Id = (
+                    SELECT Id FROM ParkingSessions
+                    WHERE CarNumber = @car AND ExitTime IS NULL
+                    ORDER BY EntryTime DESC
+                    LIMIT 1 );";
+            command.Parameters.AddWithValue("@car", carNumber);
+            command.Parameters.AddWithValue("@time", DateTime.Now.ToString("O"));
+            command.ExecuteNonQuery();
         }
 
         // Resident

@@ -27,6 +27,7 @@
                 </Style>
             </DataGrid.ColumnHeaderStyle>
             <DataGrid.Columns>
+                <DataGridTextColumn Header="T/r" Binding="{Binding Id}" Width="50"/>
                 <DataGridTextColumn Header="Mashina raqami" Binding="{Binding CarNumber}" Width="*"/>
                 <DataGridTextColumn Header="Rezident" Binding="{Binding Apartment}" Width="*"/>
                 <DataGridTextColumn Header="Kirish vaqti" Binding="{Binding EntryTime}" Width="*"/>
